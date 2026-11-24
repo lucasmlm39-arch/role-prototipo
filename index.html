@@ -563,6 +563,58 @@ body{background:#FFFFFF;background-image:none}
 </head>
 <body>
 
+<!-- tela de login do protótipo -->
+<div id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-t">
+  <form id="gate-f" autocomplete="off" novalidate>
+    <div class="g-logo">rol<span>ê</span></div>
+    <div class="g-head"><h1 id="gate-t">Entrar no protótipo</h1><p>Acesso só para quem recebeu o convite.</p></div>
+    <label for="gate-n">Nome<input id="gate-n" maxlength="40" placeholder="Como quer ser chamado" autocomplete="off"></label>
+    <label for="gate-p">Senha<input id="gate-p" type="password" inputmode="numeric" maxlength="20" placeholder="••••••" autocomplete="off"></label>
+    <p id="gate-e" class="g-err" role="alert" hidden>Senha incorreta. Tente de novo.</p>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+<style>
+#gate{position:fixed;inset:0;z-index:99999;background:#FFFFFF;color:#121731;display:flex;align-items:center;justify-content:center;
+  padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light}
+#gate[hidden]{display:none!important}
+#gate form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:16px}
+#gate .g-logo{font:800 56px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.05em}
+#gate .g-logo span{color:#E8336E}
+#gate .g-head{display:flex;flex-direction:column;gap:4px}
+#gate h1{font-size:22px;line-height:1.2;margin:0;font-weight:800;letter-spacing:-.01em}
+#gate p{margin:0;color:#5A6185;font-size:14px}
+#gate label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#5A6185}
+#gate input{font:16px system-ui,-apple-system,"Segoe UI",sans-serif;padding:13px 14px;border-radius:12px;border:1px solid #D2D7EA;background:#FFFFFF;color:#121731;outline:none}
+#gate input:focus{border-color:#121731;box-shadow:0 0 0 3px rgba(18,23,49,.12)}
+#gate button{font:800 16px system-ui,-apple-system,"Segoe UI",sans-serif;padding:14px;border-radius:12px;border:0;background:#121731;color:#FFFFFF;cursor:pointer;margin-top:4px}
+#gate button:focus-visible{outline:3px solid #E8336E;outline-offset:2px}
+#gate .g-err{color:#C73636;font-weight:700}
+#gate.g-shake form{animation:gshake .32s}
+@keyframes gshake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@media (prefers-reduced-motion:reduce){#gate.g-shake form{animation:none}}
+</style>
+<script>
+(function(){
+  var KEY='role-acesso', OK='7bb0e2f2', g=document.getElementById('gate');
+  function h(s){ var x=5381; for(var i=0;i<s.length;i++){ x=((x<<5)+x+s.charCodeAt(i))>>>0; } return x.toString(16); }
+  try{ if(localStorage.getItem(KEY)===OK){ g.hidden=true; return; } }catch(e){}
+  var n=document.getElementById('gate-n'), p=document.getElementById('gate-p'), err=document.getElementById('gate-e');
+  setTimeout(function(){ try{ n.focus(); }catch(e){} },50);
+  document.getElementById('gate-f').addEventListener('submit',function(ev){
+    ev.preventDefault();
+    if(!n.value.trim()){ err.textContent='Digite um nome para entrar.'; err.hidden=false; n.focus(); return; }
+    if(h(p.value.trim())===OK){
+      try{ localStorage.setItem(KEY,OK); localStorage.setItem('role-nome',n.value.trim()); }catch(e){}
+      g.hidden=true;
+    } else {
+      err.textContent='Senha incorreta. Tente de novo.'; err.hidden=false; p.value=''; p.focus();
+      g.classList.remove('g-shake'); void g.offsetWidth; g.classList.add('g-shake');
+    }
+  });
+})();
+</script>
+
 <div class="stage">
   <aside class="guide">
     <div class="mark">rol<span>ê</span> D</div>
