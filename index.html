@@ -1060,6 +1060,7 @@ const CITIES=[
   {id:'rj',name:'Rio de Janeiro',uf:'RJ',lat:-22.940,lng:-43.195,z:12,me:[-22.9700,-43.1860]},
   {id:'bh',name:'Belo Horizonte',uf:'MG',lat:-19.920,lng:-43.938,z:13},
   {id:'cwb',name:'Curitiba',uf:'PR',lat:-25.429,lng:-49.271,z:13},
+  {id:'mga',name:'Maringá',uf:'PR',lat:-23.418,lng:-51.936,z:14,me:[-23.4250,-51.9380]},
   {id:'poa',name:'Porto Alegre',uf:'RS',lat:-30.035,lng:-51.218,z:13},
   {id:'ssa',name:'Salvador',uf:'BA',lat:-12.974,lng:-38.501,z:13},
   {id:'rec',name:'Recife',uf:'PE',lat:-8.054,lng:-34.881,z:13},
@@ -1071,11 +1072,15 @@ EVENTS.push(
   {id:'samba',name:'Roda de Samba da Praça',date:'Hoje, sex 5 dez',time:'19h à 1h',place:'Centro',price:20,lote:'Entrada única',going:154,lat:-23.5440,lng:-46.6395,city:'sp',when:'hoje',c:'#FF7A59',producer:'Bloco da Praça',friends:[]},
   {id:'lapa',name:'Baile na Lapa',date:'Hoje, sex 5 dez',time:'22h às 5h',place:'Lapa',price:30,lote:'1º lote',going:520,lat:-22.9130,lng:-43.1795,city:'rj',when:'hoje',c:'#FF5DA2',producer:'Lapa Viva',friends:[]},
   {id:'arpoador',name:'Pôr do Sol no Arpoador',date:'Sáb, 6 dez',time:'16h às 22h',place:'Arpoador',price:50,lote:'1º lote',going:310,lat:-22.9890,lng:-43.1910,city:'rj',when:'fds',c:'#FFB23F',producer:'Maré Alta',friends:[]},
+  {id:'uem',name:'Calourada da UEM',date:'Hoje, sex 5 dez',time:'22h às 4h',place:'Zona 7',price:30,lote:'1º lote',going:640,lat:-23.4068,lng:-51.9383,city:'mga',when:'hoje',c:'#5BC0FF',producer:'Atlética UEM',friends:[]},
+  {id:'novocentro',name:'Sertanejo no Novo Centro',date:'Sáb, 6 dez',time:'22h às 5h',place:'Novo Centro',price:45,lote:'2º lote',going:380,lat:-23.4205,lng:-51.9345,city:'mga',when:'fds',c:'#FFB23F',producer:'Casa Maringá',friends:[]},
+  {id:'inga',name:'Sunset no Ingá',date:'Dom, 7 dez',time:'16h às 22h',place:'Parque do Ingá',price:35,lote:'1º lote',going:210,lat:-23.4232,lng:-51.9283,city:'mga',when:'fds',c:'#4ADE9B',producer:'Coletivo Verde',friends:[]},
   {id:'pedra',name:'Roda na Pedra',date:'Dom, 7 dez',time:'18h à 0h',place:'Saúde · Centro',price:25,lote:'Entrada única',going:205,lat:-22.8975,lng:-43.1870,city:'rj',when:'fds',c:'#5BC0FF',producer:'Coletivo Pedra',friends:[]}
 );
-PEOPLE.techno=PEOPLE.neon.slice(1,5); PEOPLE.samba=PEOPLE.sunset.slice(); PEOPLE.lapa=PEOPLE.poli.slice(); PEOPLE.arpoador=PEOPLE.sunset.slice(); PEOPLE.pedra=PEOPLE.neon.slice(0,3);
+PEOPLE.techno=PEOPLE.neon.slice(1,5); PEOPLE.samba=PEOPLE.sunset.slice(); PEOPLE.lapa=PEOPLE.poli.slice(); PEOPLE.arpoador=PEOPLE.sunset.slice(); PEOPLE.pedra=PEOPLE.neon.slice(0,3); PEOPLE.uem=PEOPLE.poli.slice(); PEOPLE.novocentro=PEOPLE.neon.slice(2,6); PEOPLE.inga=PEOPLE.sunset.slice();
 const HOODS={
   sp:[['Pinheiros',-23.567,-46.692],['Vila Madalena',-23.552,-46.690],['Centro',-23.545,-46.634],['Vila Leopoldina',-23.530,-46.735],['Butantã',-23.574,-46.716],['Vila Mariana',-23.589,-46.634],['Barra Funda',-23.523,-46.667],['Moema',-23.601,-46.664],['Itaim Bibi',-23.584,-46.678],['Mooca',-23.556,-46.598],['Perdizes',-23.537,-46.680],['Consolação',-23.551,-46.658],['Bela Vista',-23.561,-46.645],['Lapa',-23.519,-46.704]],
+  mga:[['Zona 7',-23.4080,-51.9365],['Zona 1',-23.4268,-51.9395],['Novo Centro',-23.4190,-51.9320],['Zona 5',-23.4150,-51.9470],['Zona 2',-23.4310,-51.9440],['Zona 3',-23.4330,-51.9310],['Zona 4',-23.4205,-51.9500],['Jardim Alvorada',-23.3960,-51.9580],['Vila Operária',-23.4140,-51.9250]],
   rj:[['Lapa',-22.913,-43.180],['Botafogo',-22.951,-43.184],['Copacabana',-22.971,-43.183],['Ipanema',-22.983,-43.205],['Leblon',-22.983,-43.223],['Centro',-22.904,-43.177],['Santa Teresa',-22.921,-43.190],['Flamengo',-22.933,-43.176],['Jardim Botânico',-22.966,-43.224],['Tijuca',-22.925,-43.235]]
 };
 const cityById=id=>CITIES.find(c=>c.id===id)||CITIES[0];
@@ -1135,6 +1140,14 @@ function useDrawn(){
   poly([[-23.580,-46.662],[-23.582,-46.650],[-23.594,-46.652],[-23.596,-46.663],[-23.588,-46.669]],'lf-park');
   label([-23.588,-46.658],'Ibirapuera','lf-street'); label([-23.5605,-46.659],'Av. Paulista','lf-street');
   label([-23.510,-46.640],'Rio Tietê','lf-street'); label([-23.592,-46.703],'Rio Pinheiros','lf-street');
+  // Maringá
+  line([[-23.4290,-51.9650],[-23.4268,-51.9420],[-23.4245,-51.9180]],'lf-road',5);
+  line([[-23.4105,-51.9700],[-23.4135,-51.9420],[-23.4160,-51.9100]],'lf-road',5);
+  line([[-23.4000,-51.9395],[-23.4160,-51.9390],[-23.4330,-51.9385]],'lf-road',4);
+  poly([[-23.4195,-51.9318],[-23.4198,-51.9262],[-23.4250,-51.9258],[-23.4256,-51.9312]],'lf-park');
+  poly([[-23.4050,-51.9425],[-23.4040,-51.9345],[-23.4095,-51.9335],[-23.4102,-51.9418]],'lf-park');
+  label([-23.4226,-51.9286],'Parque do Ingá','lf-street'); label([-23.4062,-51.9380],'UEM','lf-street');
+  label([-23.4276,-51.9520],'Av. Brasil','lf-street'); label([-23.4125,-51.9560],'Av. Colombo','lf-street');
   // Rio de Janeiro
   poly([[-22.962,-43.212],[-22.966,-43.201],[-22.976,-43.198],[-22.985,-43.205],[-22.981,-43.219],[-22.971,-43.221]],'lf-water');
   poly([[-22.962,-43.168],[-22.972,-43.179],[-22.986,-43.190],[-22.988,-43.205],[-22.987,-43.230],[-23.060,-43.240],[-23.060,-43.100],[-22.950,-43.110]],'lf-water');
