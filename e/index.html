@@ -415,7 +415,12 @@ textarea.ta:focus{border-color:var(--acc)}
 .map{position:absolute;inset:0;z-index:0;background:var(--mapbg);display:none}
 .show-map .map{display:block}
 .map-top .map{display:block;bottom:auto;height:300px}
-.show-map .leaflet-bottom{bottom:268px}
+.show-map .leaflet-bottom{bottom:236px}
+.openst{align-self:flex-start;font:700 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:99px;margin-bottom:2px;border:1px solid var(--line);color:var(--muted)}
+.openst.on{color:#06140D;background:var(--ok);border-color:var(--ok)}
+.openst.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#06140D;margin-right:5px;vertical-align:1px;animation:blink 1.4s ease-in-out infinite}
+.openst.soon{color:var(--acc);border-color:var(--acc)}
+@keyframes blink{50%{opacity:.2}}
 /* ---------- E: cidade acesa ---------- */
 .map.night{background:#070b1c;--mapbg:#070b1c;--river:#132f5c;--park:#0e2a22;--road:#1b2550;--sand:#4a4230;--muted:#7f89b5}
 .map.night .leaflet-tile-pane,.map.night.tiles-dark .leaflet-tile-pane{filter:grayscale(1) invert(1) contrast(1.15) brightness(.55) sepia(.45) hue-rotate(185deg) saturate(2.4)}
@@ -595,10 +600,10 @@ textarea.ta:focus{border-color:var(--acc)}
 <div class="stage">
   <aside class="guide">
     <div class="mark">rol<span>ê</span> E</div>
-    <p>A versão D com um mapa que não parece app de trânsito: a cidade vista à noite, cada rolê como uma luz que fica mais forte onde tem mais gente, e um relógio que mostra a noite acendendo e apagando.</p>
+    <p>A versão D com um mapa que não parece app de trânsito: a cidade vista à noite, cada rolê como uma luz que fica mais forte onde tem mais gente, e só fica aceso o que está aberto agora.</p>
     <div class="steps">
       <button class="step" data-a="guide" data-id="city"><b>01</b><span>Escolher a cidade<small>Pelo GPS ou pela lista de cidades</small></span></button>
-      <button class="step" data-a="guide" data-id="map"><b>02</b><span>Cidade acesa<small>Arraste o relógio da noite e aproxime o zoom para ver os cartazes</small></span></button>
+      <button class="step" data-a="guide" data-id="map"><b>02</b><span>Cidade acesa<small>"Aberto agora" pelo horário real; aproxime o zoom para ver os cartazes</small></span></button>
       <button class="step" data-a="guide" data-id="room"><b>03</b><span>Sala da festa<small>Esquenta, pista e depois</small></span></button>
       <button class="step" data-a="guide" data-id="prod"><b>P1</b><span>Painel do produtor<small>Vendas, lotes, público e repasses</small></span></button>
       <button class="step" data-a="guide" data-id="prodNew"><b>P2</b><span>Criar evento no mapa<small>Arraste o mapa pra marcar o local</small></span></button>
@@ -1128,7 +1133,7 @@ const cityById=id=>CITIES.find(c=>c.id===id)||CITIES[0];
 function distLL(a,b){ const R=6371,t=x=>x*Math.PI/180, dLa=t(b[0]-a[0]), dLo=t(b[1]-a[1]); const h=Math.sin(dLa/2)**2+Math.cos(t(a[0]))*Math.cos(t(b[0]))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
 const dist=e=>distLL(S.userPos,[e.lat,e.lng]);
 const km=e=>{ const d=dist(e); return (d<10?d.toFixed(1):String(Math.round(d))).replace('.',','); };
-const cityEvents=()=>EVENTS.filter(e=>e.city===S.city&&(S.filter==='tudo'||e.when===S.filter));
+const cityEvents=()=>EVENTS.filter(e=>e.city===S.city&&(S.filter==='tudo'||(S.filter==='agora'?evState(e)==='on':e.when===S.filter)));
 const showMesa=()=>S.city==='sp'&&(S.filter==='tudo'||S.filter==='privados');
 const soldOf=id=>{ const st=S.prod.stats[id]; return st?st.lotes.reduce((a,l)=>a+l.sold,0):0; };
 function nearestHood(ll){ const hs=HOODS[S.city]; if(!hs) return cityById(S.city).name; let best=hs[0],bd=1e9; hs.forEach(h=>{ const d=distLL([ll.lat,ll.lng],[h[1],h[2]]); if(d<bd){bd=d;best=h;} }); return best[0]; }
@@ -1201,14 +1206,14 @@ function useDrawn(){
 }
 function updateMarkers(){
   if(!map) return;
-  const key=[S.screen==='prodNew',S.city,S.filter,S.sel,S.userPos.join(','),EVENTS.length,S.churras.name,S.clock].join('|');
+  const key=[S.screen==='prodNew',S.city,S.filter,S.sel,S.userPos.join(','),EVENTS.length,S.churras.name,nowHour()].join('|');
   if(key===mkKey) return; mkKey=key; mkLayer.clearLayers();
   if(S.screen==='prodNew') return;
   cityEvents().forEach(e=>{
     const s=Math.min(46,Math.round(16+Math.sqrt(e.going||1)*1.05)), sel=S.sel===e.id;
     const fr=e.friends.length?`<em>${e.friends.slice(0,2).map(([n,h])=>av(n,h,18)).join('')}</em>`:'';
     const st=evState(e), g=Math.min(190,Math.round(70+Math.sqrt(e.going||1)*4.2)), hs=evHours(e)[0];
-    const icon=L.divIcon({className:'mkw',iconSize:[g,g],iconAnchor:[g/2,g/2],html:`<div class="nm ${st}${sel?' sel':''}" style="--c:${e.c};--g:${g}px"><span class="glow"></span><span class="dot"></span><span class="flyer"><i></i>${esc(e.name)}<small>${st==='on'?'acontecendo agora':st==='soon'?'começa '+hr(hs):esc(e.date)}</small></span></div>`});
+    const icon=L.divIcon({className:'mkw',iconSize:[g,g],iconAnchor:[g/2,g/2],html:`<div class="nm ${st}${sel?' sel':''}" style="--c:${e.c};--g:${g}px"><span class="glow"></span><span class="dot"></span><span class="flyer"><i></i>${esc(e.name)}<small>${esc(stateLabel(e))}</small></span></div>`});
     L.marker([e.lat,e.lng],{icon,title:e.name,keyboard:true,zIndexOffset:sel?1000:0}).on('click',()=>{ S.scrollCar=true; A.sel(e.id); }).addTo(mkLayer);
   });
   if(showMesa()){ const c=S.churras, sel=S.sel==='mesa';
@@ -1237,7 +1242,7 @@ function setCity(id,pos){
 function fitCity(){
   if(!map) return; const pts=EVENTS.filter(e=>e.city===S.city).map(e=>[e.lat,e.lng]);
   if(pts.length<2) return;
-  try{ map.fitBounds(L.latLngBounds(pts),{paddingTopLeft:[30,140],paddingBottomRight:[70,280],maxZoom:15}); }catch(err){}
+  try{ map.fitBounds(L.latLngBounds(pts),{paddingTopLeft:[30,140],paddingBottomRight:[70,250],maxZoom:15}); }catch(err){}
 }
 
 /* ---- telas da home e do produtor ---- */
@@ -1252,16 +1257,16 @@ function home(){
   const bar=`<div class="cbar"><button class="citybtn" data-a="cities"><span class="pinI">${ic('pin',18,2)}</span><span><b>${c.name}</b><small>${n} ${n===1?'rolê':'rolês'} · ${S.gps?'pela sua localização':'toque pra trocar de cidade'}</small></span>${ic('chev',16,2)}</button>
     <button class="mbtn" data-a="mode" data-id="${S.mode==='mapa'?'lista':'mapa'}" aria-label="${S.mode==='mapa'?'Ver em lista':'Ver no mapa'}">${ic(S.mode==='mapa'?'list':'map',18)}</button>
     <button class="avbtn" data-a="profile" aria-label="Perfil">${av('Você',280,42)}</button></div>`;
-  const fl=`<div class="filters" role="group" aria-label="Filtrar rolês">${[['tudo','Tudo'],['hoje','Hoje'],['fds','Fim de semana'],['privados','Privados']].map(([k,l])=>`<button class="${S.filter===k?'on':''}" data-a="filter" data-id="${k}">${l}</button>`).join('')}</div>`;
+  const fl=`<div class="filters" role="group" aria-label="Filtrar rolês">${[['tudo','Tudo'],['agora','Aberto agora'],['hoje','Hoje'],['fds','Fim de semana'],['privados','Privados']].map(([k,l])=>`<button class="${S.filter===k?'on':''}" data-a="filter" data-id="${k}">${l}</button>`).join('')}</div>`;
   if(S.mode==='lista'||!window.L) return `<div class="pad">${bar}${fl}${n?listHTML():emptyCity(c)}${walletPeekHTML()}</div>`;
-  const cards=evs.map(e=>`<button class="ecard${S.sel===e.id?' sel':''}${evState(e)==='off'?' off':''}" style="--c:${e.c}" data-a="sel" data-id="${e.id}"><span class="ebar"></span><p class="eyebrow">${e.real?`<span class="realtag">${e.cat} · local real</span> `:''}${e.date} · ${e.time.startsWith('à')?e.time:e.time.split(' ')[0]} · ${km(e)} km</p><b class="ename">${e.name}</b><span class="small muted">${e.place} · ${e.going} vão${e.friends.length?' · '+e.friends[0][0]+(e.friends.length>1?' +'+(e.friends.length-1):''):''}</span>
+  const cards=evs.map(e=>`<button class="ecard${S.sel===e.id?' sel':''}" style="--c:${e.c}" data-a="sel" data-id="${e.id}"><span class="openst ${evState(e)}">${esc(stateLabel(e))}</span><span class="ebar"></span><p class="eyebrow">${e.real?`<span class="realtag">${e.cat} · local real</span> `:''}${e.date} · ${e.time.startsWith('à')?e.time:e.time.split(' ')[0]} · ${km(e)} km</p><b class="ename">${e.name}</b><span class="small muted">${e.place} · ${e.going} vão${e.friends.length?' · '+e.friends[0][0]+(e.friends.length>1?' +'+(e.friends.length-1):''):''}</span>
       ${e.lineup?`<span class="small">${esc(e.lineup)}</span>`:''}
       <span class="erow2"><span class="price${e.price==null&&!S.owned[e.id]?' pq':''}">${S.owned[e.id]?'Você vai':priceTxt(e)}</span><span class="go" data-a="room" data-id="${e.id}">${S.owned[e.id]?'Entrar':'Ver sala'}${ic('arrow',14,2.2)}</span></span></button>`).join('')
     +(mesaOn?`<button class="ecard${S.sel==='mesa'?' sel':''}" style="--c:${MESA_C}" data-a="sel" data-id="mesa"><span class="ebar"></span><p class="eyebrow">Privado · ${esc(S.churras.date)} · ${km(S.churras)} km</p><b class="ename">${esc(S.churras.name)}</b><span class="small muted">${esc(S.churras.place)}</span>
       <span class="erow2"><span class="price">${brl(calc().share(S.churras.guests[0]))}</span><span class="go" data-a="mesa">Abrir a mesa${ic('arrow',14,2.2)}</span></span></button>`:'');
   return `<div class="mapui"><div class="mtop">${bar}${fl}</div>
     <div class="mside"><button class="mbtn" data-a="zoom" data-id="1" aria-label="Aproximar">${ic('plus',18,2.2)}</button><button class="mbtn" data-a="zoom" data-id="-1" aria-label="Afastar">${ic('minus',18,2.2)}</button><button class="mbtn${S.gps?' on':''}" data-a="locate" aria-label="Usar minha localização">${ic('locate',18,2)}</button></div>
-    <div class="mbottom">${n?`${clockHTML()}<div class="carousel" id="carousel">${cards}</div>`:emptyCity(c)}</div></div>`;
+    <div class="mbottom">${n?`<div class="carousel" id="carousel">${cards}</div>`:(S.filter==='agora'?`<div class="ecard empty"><b class="ename">Nada aberto agora em ${c.name}</b><p class="small muted">São ${hr(nowHour())}. Veja o que abre mais tarde.</p><button class="btn sm" data-a="filter" data-id="tudo">Ver tudo</button></div>`:emptyCity(c))}</div></div>`;
 }
 const RULES=[['match','Match da festa','Quem tem ingresso pode curtir e dar match'],['mural','Mural da festa','Compradores postam fotos e vídeos'],['once','Visualização única','Libera fotos e vídeos que abrem uma vez'],['lista','Lista de quem vai','Mostra quem comprou, menos quem ficou invisível']];
 function salesChart(d){
@@ -1359,7 +1364,19 @@ function submitProdNew(){
 /* ---- E: relógio da noite ---- */
 const hr=h=>(h%24)+'h';
 function evHours(e){ if(e.s!=null) return [e.s,e.e]; const m=/(\d+)h\D+(\d+)h/.exec(e.time||''); if(m){ let s=+m[1], en=+m[2]; if(s<12) s+=24; if(en<=s) en+=24; return [s,en]; } return [22,29]; }
-function evState(e){ const [s,en]=evHours(e), t=S.clock; if(t>=s&&t<en) return 'on'; if(t<s&&s-t<=2) return 'soon'; return 'off'; }
+function nowHour(){ try{ return (+new Date().toLocaleString('en-US',{timeZone:'America/Sao_Paulo',hour:'numeric',hour12:false}))%24; }catch(err){ return new Date().getHours(); } }
+function evState(e){
+  if(e.when!=='hoje') return 'off';
+  const [s,en]=evHours(e), h=nowHour(), inR=t=>t>=s&&t<en;
+  if(inR(h)||inR(h+24)) return 'on';
+  if(h<s&&s-h<=3) return 'soon';
+  return 'off';
+}
+function stateLabel(e){
+  const st=evState(e); if(st==='on') return 'Aberto agora';
+  if(e.when!=='hoje') return e.date;
+  const s=evHours(e)[0]; return nowHour()<s?'Abre hoje às '+hr(s):'Fechado agora';
+}
 function clockCountTxt(){ const n=cityEvents().filter(e=>evState(e)==='on').length; return n?`${n} ${n===1?'rolê aceso':'rolês acesos'}`:'cidade apagada'; }
 function clockHTML(){
   return `<div class="clock" title="Relógio da noite: arraste para ver a cidade acender e apagar">${ic('bolt',16,2)}<b id="clockLbl">${hr(S.clock)}</b>
@@ -1370,7 +1387,8 @@ function refreshClock(){
   document.querySelectorAll('.ecard[data-id]').forEach(el=>{ const e=evById(el.dataset.id); if(e) el.classList.toggle('off',evState(e)==='off'); });
   updateMarkers();
 }
-document.addEventListener('input',ev=>{ if(ev.target.id!=='clock') return; S.clock=+ev.target.value; refreshClock(); });
+let lastNowH=nowHour();
+setInterval(()=>{ const h=nowHour(); if(h!==lastNowH){ lastNowH=h; if(S.screen==='home'&&!S.sheet&&!S.viewer) render(); } },60000);
 
 /* ---- match com cards (curtir / passar) ---- */
 function deckHTML(e){
