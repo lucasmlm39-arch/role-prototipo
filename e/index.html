@@ -386,6 +386,11 @@ textarea.ta:focus{border-color:var(--acc)}
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:24px 10px;color:var(--muted)}
 
 [hidden]{display:none!important}
+/* página em volta do celular: sempre branca */
+body{background:#FFFFFF;background-image:none}
+.guide{--ink:#121731;--muted:#5A6185;--panel:#FFFFFF;--panel-2:#E2E6F3;--line:#D2D7EA;--acc:#C25E00;color:#121731}
+.phone{border-color:#121731;box-shadow:0 24px 60px -24px rgba(18,23,49,.35)}
+@media (max-width:480px){ .phone{border:1px solid #E3E6F0;box-shadow:0 10px 30px -18px rgba(18,23,49,.4)} }
 /* ---------- Leaflet (estilos essenciais embutidos) ---------- */
 .leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}
 .leaflet-container{overflow:hidden;-webkit-tap-highlight-color:transparent;font-family:var(--body);outline:0}
