@@ -1,0 +1,1744 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rolê F</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rolê">
+<meta name="theme-color" content="#0B0D14">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sem lista e sem barra de abas. Radar de festas + carteira de ingressos; cada festa é uma "sala" com um relógio lateral que muda o conteúdo (esquenta, pista, depois); dock flutuante contextual. */
+:root{
+  --bg:#0B0D14; --panel:#11141C; --panel-2:#1A1E28; --ink:#EEF0F5; --muted:#A3A9B8; --line:rgba(238,240,245,.09);
+  --acc:#F2A93B; --on-acc:#1A1206; --lilac:#A3A9B8; --ok:#4CC38A; --warn:#F2A93B; --danger:#E5484D;
+  --paper:#F3EEE3; --paper-ink:#1F1B16; --scrim:rgba(5,6,10,.66); --glass:rgba(17,20,28,.92); --frame:#11141C;
+  --mapbg:#0B0D14; --river:#16263F; --park:#13211C; --road:#1F2430; --sand:#3A352B;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F5F7FA; --panel:#FFFFFF; --panel-2:#ECEFF4; --ink:#111827; --muted:#4B5565; --line:rgba(17,24,39,.09);
+  --acc:#A15C00; --on-acc:#FFFFFF; --lilac:#4B5565; --ok:#16A34A; --warn:#A15C00; --danger:#DC2626;
+  --paper:#FFFFFF; --paper-ink:#1F1B16; --scrim:rgba(17,24,39,.4); --glass:rgba(255,255,255,.94); --frame:#111827;
+  --mapbg:#ECEFF4; --river:#B9CCE4; --park:#D3E2D6; --road:#FFFFFF; --sand:#E6DCC4;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F5F7FA; --panel:#FFFFFF; --panel-2:#ECEFF4; --ink:#111827; --muted:#4B5565; --line:rgba(17,24,39,.09);
+  --acc:#A15C00; --on-acc:#FFFFFF; --lilac:#4B5565; --ok:#16A34A; --warn:#A15C00; --danger:#DC2626;
+  --paper:#FFFFFF; --paper-ink:#1F1B16; --scrim:rgba(17,24,39,.4); --glass:rgba(255,255,255,.94); --frame:#111827;
+  --mapbg:#ECEFF4; --river:#B9CCE4; --park:#D3E2D6; --road:#FFFFFF; --sand:#E6DCC4;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background-image:radial-gradient(50% 45% at 72% 45%,color-mix(in srgb,var(--acc) 14%,transparent),transparent 70%)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.02em;font-weight:600}
+p{margin:0}
+.ic{flex:none;display:block}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.eyebrow{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+
+/* palco */
+.stage{display:flex;gap:56px;justify-content:center;align-items:center;flex-wrap:wrap;min-height:100vh;padding-block:24px}
+.guide{max-width:340px;display:flex;flex-direction:column;gap:16px}
+.guide .mark{font-family:var(--display);font-weight:600;font-size:46px;line-height:1;letter-spacing:-.04em}
+.guide .mark span{color:var(--acc)}
+.guide p{color:var(--muted)}
+.steps{display:flex;flex-direction:column;gap:6px}
+.step{display:flex;gap:12px;align-items:center;text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--panel)}
+.step:hover{border-color:var(--acc)}
+.step b{font-family:var(--mono);font-size:12px;color:var(--acc);min-width:34px}
+.step span{display:flex;flex-direction:column;font-weight:600;font-size:14px}
+.step small{color:var(--muted);font-size:12px;font-weight:400}
+.reset{align-self:flex-start;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+
+.phone{width:390px;max-width:100%;height:min(820px,calc(100vh - 48px));min-height:620px;border-radius:46px;border:10px solid var(--frame);background:var(--bg);position:relative;overflow:hidden;box-shadow:0 30px 80px -24px rgba(0,0,0,.6)}
+.app{position:absolute;inset:0;display:flex;flex-direction:column}
+.scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;padding-bottom:110px}
+.scroll::-webkit-scrollbar{display:none}
+.pad{padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+
+/* avatar */
+.av{display:inline-grid;place-items:center;border-radius:50%;color:#fff;font-weight:600;font-family:var(--body);flex:none;
+  background:linear-gradient(140deg,hsl(var(--h) 75% 58%),hsl(calc(var(--h) + 40) 70% 40%))}
+.stack{display:flex}
+.stack .av{border:2px solid var(--bg);margin-left:-8px}
+.stack .av:first-child{margin-left:0}
+
+/* botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:14px;font-weight:600;background:var(--panel-2);border:1px solid var(--line)}
+.btn.acc{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+.btn.block{width:100%}
+.btn.sm{padding:8px 12px;font-size:13px;border-radius:11px}
+.btn[disabled]{opacity:.5;cursor:default}
+
+/* home: radar */
+.hello{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.hello h1{font-size:26px;line-height:1.1}
+.mode{display:flex;gap:4px;padding:4px;border-radius:99px;background:var(--panel);border:1px solid var(--line);align-self:flex-start}
+.mode button{display:flex;gap:6px;align-items:center;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;color:var(--muted)}
+.mode button.on{background:var(--ink);color:var(--bg)}
+.radar{position:relative;width:100%;max-width:330px;aspect-ratio:1;margin:6px auto 22px}
+.radar .disc{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--panel) 90%,transparent),transparent 72%);overflow:hidden}
+.sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 290deg,color-mix(in srgb,var(--acc) 32%,transparent) 360deg);animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:1px dashed var(--line);border-radius:50%}
+.ring span{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);font:10px var(--mono);color:var(--muted);background:var(--bg);padding:0 4px;white-space:nowrap}
+.me{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:2px;font:10px var(--mono);color:var(--muted)}
+.me i{width:12px;height:12px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px color-mix(in srgb,var(--ink) 20%,transparent)}
+.blip{position:absolute;transform:translate(-50%,-50%);width:var(--s);height:var(--s);z-index:3}
+.blip i{position:absolute;inset:0;border-radius:50%;background:var(--c);animation:pulse 2.4s ease-out infinite}
+.blip.sel i{outline:2px solid var(--ink);outline-offset:4px}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 65%,transparent)}100%{box-shadow:0 0 0 20px transparent}}
+.blab{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;font-size:11px;font-weight:600;text-align:center;line-height:1.2}
+.blab small{display:block;font:10px var(--mono);color:var(--muted);font-weight:400}
+.blip .fr{position:absolute;right:-14px;top:-10px;display:flex}
+.blip .fr .av{border:2px solid var(--bg);margin-left:-6px}
+.legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font:11px var(--mono);color:var(--muted)}
+.legend span{display:flex;gap:6px;align-items:center}
+.legend i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+
+.pv{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:22px;background:var(--panel);border:1px solid var(--line);position:relative;overflow:hidden}
+.pv::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.pv h2{font-size:24px}
+.pv-row{display:flex;gap:10px;align-items:center}
+.pv-act{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:4px}
+.price{font-family:var(--display);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.erow{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:var(--panel);border:1px solid var(--line);text-align:left;width:100%}
+.erow .dotc{width:14px;height:14px;border-radius:50%;background:var(--c);flex:none}
+.erow .grow{flex:1;min-width:0}
+.erow b{display:block}
+.erow small{color:var(--muted);font-size:12px}
+
+/* carteira */
+.peek{display:flex;flex-direction:column;text-align:left;width:100%;gap:0}
+.peek .eyebrow{margin-bottom:8px}
+.pk{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 26px;border-radius:18px;background:var(--c);color:#140C14;font-family:var(--display);font-weight:600;font-size:15px;box-shadow:0 -6px 16px -8px rgba(0,0,0,.5)}
+.pk+.pk{margin-top:-14px}
+.pk small{font-family:var(--mono);font-weight:400;font-size:11px;opacity:.75}
+.wallet{position:absolute;inset:0;z-index:35;background:var(--bg);display:flex;flex-direction:column}
+.wallet.enter{animation:slidein .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes slidein{from{transform:translateY(40px)}}
+.wtop{display:flex;justify-content:space-between;align-items:center;padding:18px 16px 8px}
+.wtop h2{font-size:24px}
+.wlist{flex:1;overflow-y:auto;padding:8px 16px 30px;display:flex;flex-direction:column;gap:14px}
+.wc{perspective:900px;height:210px;flex:none}
+.wc-in{position:relative;height:100%;transition:transform .55s cubic-bezier(.3,.7,.2,1);transform-style:preserve-3d}
+.wc.flip .wc-in{transform:rotateY(180deg)}
+.wc-front,.wc-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:22px;padding:18px;display:flex;flex-direction:column;justify-content:space-between;text-align:left}
+.wc-front{background:var(--c);color:#140C14;
+  -webkit-mask:radial-gradient(circle 13px at 0 62%,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 13px at 100% 62%,#0000 97%,#000) right/51% 100% no-repeat;
+  mask:radial-gradient(circle 13px at 0 62%,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 13px at 100% 62%,#0000 97%,#000) right/51% 100% no-repeat}
+.wc-front h3{font-size:30px;line-height:1;font-weight:600}
+.wc-front .meta{display:flex;justify-content:space-between;align-items:flex-end;font:12px var(--mono);border-top:2px dashed rgba(20,12,20,.35);padding-top:10px}
+.wc-back{transform:rotateY(180deg);background:var(--panel);border:1px solid var(--line);flex-direction:row;gap:14px;align-items:center}
+.wc-back .col{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
+.qr{width:130px;height:130px;border-radius:12px;background:#fff;padding:7px;flex:none}
+.qr svg{display:block;width:100%;height:100%}
+.count{font-family:var(--mono);color:var(--acc);font-weight:600}
+
+/* sala */
+.rh{padding:16px 16px 14px;display:flex;gap:12px;align-items:flex-start;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 32%,var(--bg)),var(--bg))}
+.rh h1{font-size:30px;line-height:1.02;font-weight:600}
+.rh .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.backbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--glass);border:1px solid var(--line);flex:none}
+.room{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:0 14px 0 0}
+.rail{position:sticky;top:0;align-self:start;display:flex;flex-direction:column;padding:6px 0 10px}
+.rail .now{font:9px var(--mono);letter-spacing:.1em;color:var(--muted);text-align:center;padding-bottom:6px}
+.hr{height:38px;font:12px var(--mono);color:var(--muted);border-left:3px solid var(--pc);text-align:center;transition:background .15s}
+.hr.esquenta{--pc:var(--lilac)} .hr.pista{--pc:var(--acc)} .hr.depois{--pc:var(--ok)}
+.hr:hover{background:color-mix(in srgb,var(--pc) 15%,transparent)}
+.hr.on{background:var(--pc);color:var(--bg);font-weight:600;border-radius:0 12px 12px 0}
+.rc{display:flex;flex-direction:column;gap:16px;padding-top:6px;min-width:0}
+.phead{display:flex;flex-direction:column;gap:4px}
+.phead .tag{align-self:flex-start;font:11px var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:99px;background:color-mix(in srgb,var(--pc) 22%,transparent);color:var(--pc)}
+.phead.esquenta{--pc:var(--lilac)} .phead.pista{--pc:var(--acc)} .phead.depois{--pc:var(--ok)}
+.phead h2{font-size:22px}
+.sec{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sec h3{font-size:15px}
+.hint{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+
+/* constelação de quem vai */
+.const{position:relative;height:250px;border-radius:20px;background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--lilac) 14%,transparent),transparent 70%),var(--panel);border:1px solid var(--line);overflow:hidden}
+.const::before{content:"";position:absolute;inset:0;background-image:radial-gradient(color-mix(in srgb,var(--ink) 30%,transparent) 1px,transparent 1.5px);background-size:22px 22px;opacity:.35}
+.cp{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:600}
+.cp.ghost{opacity:.45;pointer-events:none}
+.cp.friend .av{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--lilac)}
+.cp .wv{position:absolute;top:-6px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--acc);color:var(--on-acc);display:grid;place-items:center}
+.cmore{position:absolute;right:10px;bottom:10px;font:11px var(--mono);padding:4px 8px;border-radius:99px;background:var(--glass);border:1px solid var(--line)}
+.door{position:relative}
+.door .const{filter:blur(6px);opacity:.7}
+.door-over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:16px}
+.door-over .lk{width:46px;height:46px;border-radius:50%;background:var(--acc);color:var(--on-acc);display:grid;place-items:center}
+.door-over h3{font-size:16px}
+.door-list{display:flex;flex-direction:column;gap:8px}
+.door-list div{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-size:13px}
+.door-list .ic{color:var(--acc)}
+
+/* mural em mosaico */
+.wall{columns:2;column-gap:8px}
+.tile{break-inside:avoid;margin:0 0 8px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.tile.text{background:linear-gradient(160deg,hsl(var(--th) 75% 60% / .28),var(--panel) 80%)}
+.ttext{padding:14px 12px 2px;font-family:var(--display);font-size:13px;line-height:1.35;font-weight:500}
+.tcap{padding:8px 10px 0;font-size:12px}
+.tauthor{display:flex;align-items:center;gap:6px;padding:8px 10px 10px;font-size:11px;color:var(--muted);min-width:0}
+.tauthor b{color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tauthor .prod{font:9px var(--mono);text-transform:uppercase;color:var(--acc)}
+.tlike{position:absolute;top:8px;right:8px;display:flex;gap:3px;align-items:center;font-size:11px;font-weight:600;padding:3px 7px;border-radius:99px;background:var(--glass);color:var(--ink);z-index:4}
+.tlike.on{color:var(--acc)}
+
+/* mídia */
+.media{position:relative;overflow:hidden;height:var(--mh,180px);background:#111;display:block;width:100%;text-align:left;color:#fff}
+.media img,.media video{width:100%;height:100%;object-fit:cover;display:block}
+.media .cap{position:absolute;left:8px;bottom:8px;right:50px;font-size:11px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.7);z-index:2}
+.media .dur{position:absolute;right:8px;bottom:8px;z-index:2;font:11px var(--mono);background:rgba(0,0,0,.6);color:#fff;padding:2px 6px;border-radius:99px}
+.media .playbtn{position:absolute;inset:0;margin:auto;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.25);backdrop-filter:blur(8px);display:grid;place-items:center;z-index:2;color:#fff}
+.media.once .sc,.media.once img,.media.once video{filter:blur(20px) saturate(1.3);transform:scale(1.25)}
+.once-over{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:12px;background:rgba(0,0,0,.25);color:#fff}
+.once-over .one{width:44px;height:44px;border-radius:50%;border:2px dashed currentColor;display:grid;place-items:center;font-family:var(--display);font-size:20px;font-weight:600;flex:none}
+.once-over b{font-size:13px}
+.once-over small{font-size:11px;opacity:.85}
+.media.opened{height:auto;background:var(--panel-2);color:var(--muted)}
+.media.opened .once-over{position:static;background:none;flex-direction:row;justify-content:flex-start;text-align:left;padding:12px;color:var(--muted)}
+.media.opened .one{width:34px;height:34px;font-size:15px}
+.sc{position:absolute;inset:0;overflow:hidden}
+.sc::before,.sc::after{content:"";position:absolute;inset:0}
+.sc-palco{background:linear-gradient(#07040f,#2b0d3d 70%,#5c1040)}
+.sc-palco::before{background:conic-gradient(from 160deg at 25% -5%,transparent 0 12deg,rgba(110,200,255,.55) 16deg,transparent 22deg),conic-gradient(from 165deg at 75% -5%,transparent 0 10deg,rgba(255,70,190,.55) 15deg,transparent 21deg),conic-gradient(from 175deg at 50% -5%,transparent 0 6deg,rgba(255,230,120,.45) 9deg,transparent 13deg),radial-gradient(60% 30% at 50% 78%,rgba(255,60,160,.6),transparent)}
+.sc-palco::after,.sc-pista::after{top:auto;height:38%;background:radial-gradient(circle 16px at 6% 40%,#050208 97%,transparent),radial-gradient(circle 19px at 18% 30%,#050208 97%,transparent),radial-gradient(circle 15px at 30% 45%,#050208 97%,transparent),radial-gradient(circle 20px at 43% 28%,#050208 97%,transparent),radial-gradient(circle 16px at 56% 42%,#050208 97%,transparent),radial-gradient(circle 18px at 68% 32%,#050208 97%,transparent),radial-gradient(circle 15px at 80% 44%,#050208 97%,transparent),radial-gradient(circle 19px at 93% 30%,#050208 97%,transparent),linear-gradient(transparent 52%,#050208 52%)}
+.sc-pista{background:linear-gradient(165deg,#00163a,#2c0a4a 60%,#4a0038)}
+.sc-pista::before{background:repeating-linear-gradient(105deg,transparent 0 28px,rgba(0,255,210,.4) 29px 30px,transparent 31px 64px),repeating-linear-gradient(72deg,transparent 0 44px,rgba(255,60,200,.4) 45px 46px,transparent 47px 90px),radial-gradient(50% 35% at 50% 12%,rgba(255,255,255,.4),transparent)}
+.sc-bar{background:linear-gradient(170deg,#3a1708,#7a3a12 60%,#2a0f05)}
+.sc-bar::before{filter:blur(3px);background:radial-gradient(circle 26px at 15% 25%,rgba(255,200,110,.85) 60%,transparent),radial-gradient(circle 18px at 35% 15%,rgba(255,150,70,.8) 60%,transparent),radial-gradient(circle 34px at 62% 28%,rgba(255,220,150,.6) 60%,transparent),radial-gradient(circle 22px at 85% 18%,rgba(255,120,80,.8) 60%,transparent),radial-gradient(circle 16px at 75% 50%,rgba(255,200,120,.6) 60%,transparent),radial-gradient(circle 20px at 25% 55%,rgba(255,170,90,.5) 60%,transparent)}
+.sc-bar::after{top:auto;height:40%;background:radial-gradient(40px 62px at 30% 100%,#160803 97%,transparent),radial-gradient(46px 72px at 70% 100%,#160803 97%,transparent),linear-gradient(transparent,rgba(0,0,0,.55))}
+.sc-sunset{background:linear-gradient(#ff9a3c,#ff5e62 45%,#8e2de2 100%)}
+.sc-sunset::before{background:radial-gradient(circle 40px at 50% 62%,#ffe08a 96%,transparent),radial-gradient(70% 25% at 50% 62%,rgba(255,230,150,.5),transparent)}
+.sc-sunset::after{top:auto;height:34%;background:linear-gradient(#1a0820 0 0) 0 100%/16% 55% no-repeat,linear-gradient(#1a0820 0 0) 17% 100%/10% 85% no-repeat,linear-gradient(#1a0820 0 0) 30% 100%/14% 45% no-repeat,linear-gradient(#1a0820 0 0) 48% 100%/9% 100% no-repeat,linear-gradient(#1a0820 0 0) 62% 100%/15% 60% no-repeat,linear-gradient(#1a0820 0 0) 80% 100%/11% 78% no-repeat,linear-gradient(#1a0820 0 0) 100% 100%/14% 50% no-repeat}
+.sc-look{background:linear-gradient(160deg,#ff5fa2,#7a2cff)}
+.sc-look::before{background:radial-gradient(circle 32px at 50% 32%,#2a0f2f 96%,transparent),radial-gradient(70px 110px at 50% 100%,#2a0f2f 96%,transparent)}
+.sc-churras{background:radial-gradient(80% 60% at 50% 85%,#ff8a1f,#a32a00 55%,#2a0a00)}
+.sc-churras::before{top:40%;background:repeating-linear-gradient(90deg,transparent 0 20px,rgba(25,10,0,.85) 20px 24px)}
+.sc-churras::after{background:radial-gradient(38px 11px at 28% 58%,#5a1a08 95%,transparent),radial-gradient(38px 11px at 62% 66%,#5a1a08 95%,transparent),radial-gradient(44px 26px at 45% 78%,#7a2a10 95%,transparent),radial-gradient(30px 10px at 75% 52%,#5a1a08 95%,transparent)}
+.sc-amanhecer{background:linear-gradient(#2b3a67,#c9748f 60%,#f6c58e)}
+.sc-amanhecer::after{top:auto;height:30%;background:linear-gradient(transparent,rgba(10,10,30,.6)),radial-gradient(60px 50px at 30% 100%,#101024 97%,transparent),radial-gradient(70px 60px at 72% 100%,#101024 97%,transparent)}
+.sc.anim{animation:hue 5s linear infinite}
+.sc.anim::before{animation:sway 2.4s ease-in-out infinite alternate}
+@keyframes sway{from{transform:translateX(-8%)}to{transform:translateX(8%)}}
+@keyframes hue{to{filter:hue-rotate(70deg)}}
+
+/* pista */
+.stories{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px}
+.stories::-webkit-scrollbar{display:none}
+.st{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:600;flex:none;width:62px;position:relative}
+.st .ring2{width:60px;height:60px;border-radius:50%;padding:3px;background:conic-gradient(var(--acc),var(--lilac),var(--acc))}
+.st.seen .ring2{background:var(--line)}
+.st .ring2 .av{width:100%!important;height:100%!important;border:3px solid var(--bg)}
+.st .b1{position:absolute;top:40px;right:2px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--bg);font:10px var(--mono);display:grid;place-items:center;border:2px solid var(--bg)}
+.thermo{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.trow{display:grid;grid-template-columns:96px 1fr 38px;gap:8px;align-items:center;font-size:12px}
+.trow .bar{height:8px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.trow .bar i{display:block;height:100%;border-radius:99px}
+.trow span:last-child{font-family:var(--mono);text-align:right;color:var(--muted)}
+.near{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ncard{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;background:var(--panel);border:1px solid var(--line);text-align:center;font-size:12px}
+.ncard small{color:var(--muted);font-size:10px;font-family:var(--mono)}
+.wavebtn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:5px 9px;border-radius:99px;background:var(--acc);color:var(--on-acc)}
+.wavebtn.done{background:var(--panel-2);color:var(--muted)}
+.deck{position:relative;height:400px}
+.swipe{position:absolute;inset:0;border-radius:22px;overflow:hidden;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;touch-action:none;user-select:none;transition:transform .22s ease,opacity .22s ease;box-shadow:0 14px 30px -14px rgba(0,0,0,.6);cursor:grab}
+.swipe.under{transform:scale(.95) translateY(12px);opacity:.6;pointer-events:none}
+.swipe .face{flex:1;position:relative;display:grid;place-items:center;background:linear-gradient(160deg,hsl(var(--h) 70% 58%),hsl(calc(var(--h) + 50) 65% 32%))}
+.swipe .big{font-family:var(--display);font-size:110px;font-weight:600;color:rgba(255,255,255,.9)}
+.swipe .vf{position:absolute;top:10px;left:10px;display:flex;gap:4px;align-items:center;font-size:11px;font-weight:600;color:#fff;background:rgba(0,0,0,.3);padding:3px 8px;border-radius:99px}
+.stamp2{position:absolute;top:18px;font-family:var(--display);font-weight:600;font-size:22px;padding:2px 10px;border:3px solid;border-radius:10px;opacity:0;transition:opacity .1s;background:rgba(0,0,0,.25)}
+.stamp2.like{left:14px;color:#7CFFC4;transform:rotate(-12deg)}
+.stamp2.pass{right:14px;color:#FFC2D6;transform:rotate(12deg)}
+.swipe[data-dir="like"] .stamp2.like,.swipe[data-dir="pass"] .stamp2.pass{opacity:1}
+.swipe .info{padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.swipe .info h3{font-size:20px}
+.swipe .info h3 span{font-weight:500;color:var(--muted)}
+.deck-btns{display:flex;justify-content:center;gap:22px}
+.round{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line)}
+.round.like{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+
+/* depois */
+.seen-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.seen-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:16px;background:var(--panel);border:1px solid var(--line);font-size:12px;font-weight:600;text-align:center}
+.seen-card.on{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--panel))}
+.seen-card .vi{font-size:10px;font-family:var(--mono);color:var(--muted);display:flex;gap:4px;align-items:center}
+.seen-card.on .vi{color:var(--ok)}
+
+/* mesa (cupom) */
+.receipt{position:relative;background:var(--paper);color:var(--paper-ink);font-family:var(--mono);font-size:12.5px;padding:22px 18px;margin:12px 0;display:flex;flex-direction:column;gap:6px;box-shadow:0 18px 30px -18px rgba(0,0,0,.5)}
+.receipt::before,.receipt::after{content:"";position:absolute;left:0;right:0;height:10px}
+.receipt::before{top:-10px;background:radial-gradient(circle at 8px 0,transparent 7px,var(--paper) 7.5px) 0 0/16px 10px repeat-x}
+.receipt::after{bottom:-10px;background:radial-gradient(circle at 8px 10px,transparent 7px,var(--paper) 7.5px) 0 0/16px 10px repeat-x}
+.receipt .ctr{text-align:center}
+.receipt h2{font-family:var(--display);font-size:22px;color:var(--paper-ink);text-align:center;text-transform:uppercase;letter-spacing:-.01em}
+.rule{border-top:1px dashed currentColor;opacity:.45;margin:6px 0}
+.rl{display:flex;gap:6px;align-items:baseline;min-width:0}
+.rl .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl .dots{flex:1;border-bottom:1px dotted currentColor;opacity:.35;min-width:12px;transform:translateY(-3px)}
+.rl .v{font-variant-numeric:tabular-nums;white-space:nowrap}
+.rl.tot{font-weight:600;font-size:15px}
+.rl .x{opacity:.5;padding:0 2px}
+.tag-b{font-size:10px;padding:0 5px;border:1px solid currentColor;border-radius:4px;opacity:.7}
+.guest{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:4px 0}
+.guest .gn{display:flex;gap:6px;align-items:center;min-width:0}
+.guest .gn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drk{font-size:10px;padding:1px 6px;border:1px solid currentColor;border-radius:99px;opacity:.55}
+.drk.on{opacity:1;background:var(--paper-ink);color:var(--paper)}
+.stamp{font-size:10px;font-weight:600;padding:1px 6px;border:2px solid #15924F;color:#15924F;transform:rotate(-8deg);border-radius:4px;letter-spacing:.06em}
+.payme{font-size:10px;font-weight:600;padding:2px 6px;border:2px dashed #B5541A;color:#B5541A;border-radius:4px}
+.barcode{height:38px;margin-top:4px;background:repeating-linear-gradient(90deg,var(--paper-ink) 0 2px,transparent 2px 4px,var(--paper-ink) 4px 5px,transparent 5px 8px,var(--paper-ink) 8px 11px,transparent 11px 12px)}
+.addrow{display:grid;grid-template-columns:1fr 80px;gap:6px}
+.addrow input,.addrow select{width:100%;min-width:0;padding:8px 10px;border-radius:8px;border:1px dashed currentColor;background:transparent;color:var(--paper-ink);font:12px var(--mono);outline:none}
+.addrow .full{grid-column:1/-1;display:flex;gap:6px}
+.addrow .full select{flex:1}
+.addrow button{font:12px var(--mono);padding:8px 10px;border-radius:8px;background:var(--paper-ink);color:var(--paper)}
+.mesa-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.linkbox{display:flex;gap:8px;align-items:center;padding:10px 10px 10px 14px;border-radius:14px;background:var(--panel);border:1px dashed var(--line);font:12px var(--mono)}
+.linkbox span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* acenos */
+.recv{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:20px;background:linear-gradient(150deg,color-mix(in srgb,var(--acc) 22%,var(--panel)),var(--panel));border:1px solid var(--line)}
+.recv .blurstack{display:flex;filter:blur(5px)}
+.recv .blurstack .av{margin-left:-10px;border:2px solid var(--panel)}
+.list{display:flex;flex-direction:column;border-radius:18px;background:var(--panel);border:1px solid var(--line);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line);text-align:left;width:100%}
+.row:first-child{border-top:0}
+.row .grow{flex:1;min-width:0}
+.row .grow b{display:block;font-size:14px}
+.row .grow small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill-new{font:10px var(--mono);padding:2px 7px;border-radius:99px;background:var(--acc);color:var(--on-acc)}
+
+/* dock */
+.dock{position:absolute;left:12px;right:12px;bottom:14px;z-index:15;display:grid;grid-template-columns:52px 1fr 52px;gap:8px;padding:6px;border-radius:24px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);box-shadow:0 14px 30px -12px rgba(0,0,0,.6)}
+.dock .side{height:48px;border-radius:18px;display:grid;place-items:center;position:relative;color:var(--ink)}
+.dock .side:hover{background:var(--panel-2)}
+.dock .main{height:48px;border-radius:18px;background:var(--acc);color:var(--on-acc);font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px}
+.dock .main[disabled]{background:var(--panel-2);color:var(--muted)}
+.dock .badge{position:absolute;top:4px;right:4px;min-width:18px;height:18px;border-radius:99px;background:var(--acc);color:var(--on-acc);font:10px var(--mono);font-weight:600;display:grid;place-items:center;padding:0 4px}
+
+/* folhas */
+.scrim{position:absolute;inset:0;background:var(--scrim);z-index:20;animation:fade .2s}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--bg);border-top:1px solid var(--line);border-radius:28px 28px 0 0;padding:10px 18px 26px;max-height:88%;overflow-y:auto;display:flex;flex-direction:column;gap:14px;animation:up .26s cubic-bezier(.2,.8,.2,1)}
+.sheet .grab{width:40px;height:5px;border-radius:99px;background:var(--line);align-self:center}
+.sheet h3{font-size:19px}
+.lines{display:grid;gap:8px;font-size:14px}
+.lines div{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
+.lines .tot{border-top:1px solid var(--line);padding-top:8px;font-weight:600;font-size:16px}
+.payopt{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);text-align:left;width:100%}
+.payopt.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+.payopt .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none}
+.payopt.on .dot{border:5px solid var(--acc)}
+.center{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.okmark{width:72px;height:72px;border-radius:50%;background:var(--ok);color:#06140D;display:grid;place-items:center;animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+.pair{display:flex;align-items:center}
+.pair .av{border:3px solid var(--bg)}
+.pair .av+.av{margin-left:-18px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;padding:4px 10px;border-radius:99px;background:var(--panel-2)}
+.msgs{display:flex;flex-direction:column;gap:8px;min-height:160px}
+.msg{max-width:78%;padding:9px 13px;border-radius:16px;font-size:14px;background:var(--panel-2);align-self:flex-start}
+.msg.me{background:var(--acc);color:var(--on-acc);align-self:flex-end}
+.composer{display:flex;gap:8px;align-items:center;padding:6px 6px 6px 14px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.composer input{flex:1;min-width:0;border:0;background:none;outline:none;padding:6px 0}
+textarea.ta{width:100%;min-height:90px;resize:vertical;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--panel);outline:none}
+textarea.ta:focus{border-color:var(--acc)}
+.draft{display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.draft .thumb{width:56px;height:56px;border-radius:10px;overflow:hidden;flex:none;background:#000}
+.draft .thumb img,.draft .thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.toggle{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.toggle.on{border-color:var(--acc);color:var(--acc)}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.field input{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);outline:none;color:var(--ink)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:8px 12px;border-radius:11px;border:1px solid var(--line);font-size:13px;background:var(--panel)}
+.seg button.on{border-color:var(--acc);color:var(--acc);font-weight:600}
+.switch{width:46px;height:28px;border-radius:99px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch.on{background:var(--acc)}
+.switch.on::after{transform:translateX(18px)}
+
+.viewer{position:absolute;inset:0;z-index:40;background:#000;color:#fff;display:flex;flex-direction:column;animation:fade .2s}
+.viewer .stage-m{position:relative;flex:1;overflow:hidden}
+.viewer .stage-m img,.viewer .stage-m video{width:100%;height:100%;object-fit:contain;display:block}
+.viewer .prog{position:absolute;top:12px;left:12px;right:12px;height:3px;background:rgba(255,255,255,.3);border-radius:3px;z-index:3;overflow:hidden}
+.viewer .prog i{display:block;height:100%;background:#fff;width:0;animation:prog var(--d) linear forwards}
+@keyframes prog{to{width:100%}}
+.viewer .vtop{position:absolute;top:24px;left:12px;right:12px;display:flex;align-items:center;gap:10px;z-index:3}
+.viewer .vtop .grow{flex:1;min-width:0;font-size:13px}
+.vclose{width:38px;height:38px;border-radius:50%;background:rgba(127,127,127,.22);display:grid;place-items:center}
+.viewer .vfoot{position:absolute;left:0;right:0;bottom:0;padding:48px 16px 22px;background:linear-gradient(transparent,rgba(0,0,0,.75));z-index:3;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.oncetag{align-self:flex-start;font:11px var(--mono);font-weight:600;padding:3px 9px;border-radius:99px;background:#FF9F1C;color:#1A1000;text-transform:uppercase}
+
+.toast{position:absolute;left:16px;right:16px;bottom:88px;z-index:30;padding:12px 14px;border-radius:16px;background:var(--ink);color:var(--bg);font-size:14px;font-weight:600;animation:up .25s;display:flex;gap:10px;align-items:center}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:24px 10px;color:var(--muted)}
+
+[hidden]{display:none!important}
+/* página em volta do celular: sempre branca */
+body{background:#FFFFFF;background-image:none}
+.guide{--ink:#121731;--muted:#5A6185;--panel:#FFFFFF;--panel-2:#E2E6F3;--line:#D2D7EA;--acc:#C25E00;color:#121731}
+.phone{border-color:#121731;box-shadow:0 24px 60px -24px rgba(18,23,49,.35)}
+@media (max-width:480px){ .phone{border:1px solid #E3E6F0;box-shadow:0 10px 30px -18px rgba(18,23,49,.4)} }
+/* ---------- Leaflet (estilos essenciais embutidos) ---------- */
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;-webkit-tap-highlight-color:transparent;font-family:var(--body);outline:0}
+.leaflet-container.leaflet-touch-drag{touch-action:none}
+.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{user-select:none;-webkit-user-drag:none}
+.leaflet-tile{filter:inherit;visibility:hidden}
+.leaflet-tile-loaded{visibility:inherit}
+.leaflet-container img.leaflet-tile,.leaflet-container .leaflet-marker-pane img{max-width:none!important;max-height:none!important}
+.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}
+.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}
+.leaflet-control{position:relative;z-index:800;pointer-events:auto;float:left;clear:both}
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}
+.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}
+.leaflet-right .leaflet-control{float:right;margin-right:8px}.leaflet-bottom .leaflet-control{margin-bottom:6px}
+.leaflet-zoom-animated{transform-origin:0 0}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-zoom-anim .leaflet-tile,.leaflet-pan-anim .leaflet-tile{transition:none}
+.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}
+.leaflet-interactive{cursor:pointer}
+.leaflet-grab{cursor:grab}.leaflet-dragging .leaflet-grab{cursor:grabbing}
+.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-image-layer,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}
+.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive{pointer-events:auto}
+.leaflet-control-attribution{background:var(--glass);color:var(--muted);font-size:10px;padding:2px 7px;border-radius:8px}
+.leaflet-control-attribution a{color:var(--muted)}
+
+/* ---------- mapa da cidade ---------- */
+.map{position:absolute;inset:0;z-index:0;background:var(--mapbg);display:none}
+.show-map .map{display:block}
+.map-top .map{display:block;bottom:auto;height:300px}
+.show-map .leaflet-bottom{bottom:236px}
+.openst{align-self:flex-start;font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:99px;margin-bottom:2px;border:1px solid var(--line);color:var(--muted)}
+.openst.on{color:#06140D;background:var(--ok);border-color:var(--ok)}
+.openst.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#06140D;margin-right:5px;vertical-align:1px;animation:blink 1.4s ease-in-out infinite}
+.openst.soon{color:var(--acc);border-color:var(--acc)}
+@keyframes blink{50%{opacity:.2}}
+/* ---------- E: cidade acesa ---------- */
+.map.night{background:#07080D;--mapbg:#07080D;--river:#142338;--park:#101C17;--road:#20242E;--sand:#3A352B;--muted:#7A8296}
+.map.night .leaflet-tile-pane,.map.night.tiles-dark .leaflet-tile-pane{filter:grayscale(1) invert(1) contrast(1.15) brightness(.55) sepia(.45) hue-rotate(185deg) saturate(2.4)}
+.map.night::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:450;background:radial-gradient(ellipse 80% 70% at 50% 42%,transparent 35%,rgba(4,6,18,.6))}
+.map.night .leaflet-control-attribution{background:rgba(7,8,13,.8);color:#7A8296}
+.map.night .leaflet-control-attribution a{color:#7A8296}
+.nm{position:relative;width:var(--g);height:var(--g)}
+.nm .glow{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--c) 90%,transparent) 0,color-mix(in srgb,var(--c) 40%,transparent) 28%,transparent 68%);mix-blend-mode:screen;animation:breathe 3.2s ease-in-out infinite;transition:opacity .35s,transform .35s}
+.nm .dot{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px var(--c),0 0 16px 2px var(--c);transition:opacity .35s}
+.nm.sel .dot{width:16px;height:16px;margin:-8px 0 0 -8px;box-shadow:0 0 0 3px var(--c),0 0 0 6px #fff,0 0 22px 4px var(--c)}
+.nm.soon .glow{opacity:.35;transform:scale(.55);animation:none}
+.nm.off .glow{opacity:0;animation:none}
+.nm.off .dot{background:var(--c);opacity:.35;box-shadow:none}
+.nm .flyer{position:absolute;left:50%;bottom:calc(50% + 14px);transform:translateX(-50%) rotate(-4deg);background:var(--c);color:#120a14;padding:5px 9px 6px;border-radius:3px;font:600 12px/1.15 var(--body);white-space:nowrap;box-shadow:3px 4px 0 rgba(0,0,0,.55);display:none;text-align:left}
+.nm .flyer::after{content:"";position:absolute;left:50%;bottom:-6px;width:2px;height:7px;background:var(--c);transform:translateX(-50%)}
+.nm .flyer small{display:block;font:600 9px var(--mono);opacity:.8;text-transform:uppercase;letter-spacing:.06em}
+.nm .flyer i{position:absolute;top:-4px;left:12px;width:22px;height:8px;background:rgba(255,255,255,.55);transform:rotate(3deg)}
+.z-near .nm:not(.off) .flyer,.nm.sel .flyer{display:block}
+.nm.off.sel .flyer{opacity:.7}
+.nm.priv .dot{background:var(--c);border:2px dashed #fff}
+@keyframes breathe{50%{transform:scale(1.12);opacity:.85}}
+.clock{margin:0 12px 8px;padding:7px 12px;border-radius:16px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.clock b{font-family:var(--display);font-size:17px;font-variant-numeric:tabular-nums;min-width:38px}
+.clock input{flex:1;min-width:0;accent-color:var(--acc);margin:0}
+.clock .small{white-space:nowrap;font-size:11px}
+.over-map .ecard{padding:10px 12px 10px 16px}
+.over-map .ecard .ename{font-size:15px}
+.mside{top:24%}
+.ecard.off{filter:saturate(.15)}
+.ecard.off .ename,.ecard.off .eyebrow{color:var(--muted)}
+.leaflet-marker-icon.mkw{pointer-events:none!important}
+.nm .dot,.nm .flyer{pointer-events:auto;cursor:pointer}
+.nm .dot::before{content:"";position:absolute;inset:-12px;border-radius:50%}
+.ecard .live{color:var(--ok);font-weight:600}
+.map .leaflet-tile-pane{filter:saturate(.75)}
+.map.tiles-dark .leaflet-tile-pane{filter:invert(1) hue-rotate(195deg) brightness(.85) contrast(.9) saturate(.55)}
+.app{z-index:1}
+.app.over-map{pointer-events:none}
+.over-map>.dock,.over-map>.sheet,.over-map>.scrim,.over-map>.toast,.over-map>.wallet,.over-map>.viewer{pointer-events:auto}
+.over-map .scroll{pointer-events:none;background:transparent}
+.mapui{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:12px 0 84px}
+.mtop{display:flex;flex-direction:column;gap:8px;padding:0 12px;pointer-events:auto}
+.cbar{display:flex;gap:8px;align-items:center}
+.citybtn{flex:1;min-width:0;display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:16px;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);text-align:left}
+.citybtn>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.citybtn b{font-family:var(--display);font-size:15px}
+.citybtn small{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pinI{color:var(--acc)}
+.mbtn{width:44px;height:44px;border-radius:14px;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.mbtn.on{color:var(--acc);border-color:var(--acc)}
+.avbtn{flex:none}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.filters button{flex:none;padding:7px 12px;border-radius:99px;font-size:12px;font-weight:600;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line)}
+.filters button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mside{position:absolute;right:12px;top:44%;display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+.mbottom{pointer-events:auto}
+.carousel{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 12px 8px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.ecard{flex:none;width:78%;max-width:290px;scroll-snap-align:center;display:flex;flex-direction:column;gap:3px;text-align:left;padding:13px 14px 12px 18px;border-radius:20px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);position:relative;overflow:hidden}
+.ecard .ebar{position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.ecard.sel{border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+.ename{font-family:var(--display);font-size:17px;line-height:1.15;font-weight:600}
+.erow2{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px}
+.go{display:inline-flex;gap:4px;align-items:center;font-weight:600;font-size:13px;padding:7px 12px;border-radius:12px;background:var(--acc);color:var(--on-acc);white-space:nowrap}
+.ecard.empty{width:auto;max-width:none;margin:0 12px;gap:8px}
+.realtag{display:inline-block;color:var(--ok);border:1px solid var(--ok);border-radius:99px;padding:0 6px;margin-right:4px;letter-spacing:.06em}
+.price.pq{font-size:13px;font-family:var(--body);font-weight:600;color:var(--muted)}
+.ecard.empty .btn{align-self:flex-start}
+.mkw{background:none;border:0}
+.mk{position:relative;width:var(--s);height:var(--s)}
+.mk i{position:absolute;inset:0;border-radius:50%;background:var(--c);border:2px solid var(--bg)}
+.mk.sel i{animation:pulse 2.4s ease-out infinite}
+.over-map .citybtn,.over-map .mbtn,.over-map .filters button,.over-map .ecard,.mk b{backdrop-filter:none;-webkit-backdrop-filter:none}
+.over-map .citybtn,.over-map .mbtn,.over-map .filters button:not(.on),.over-map .ecard{background:var(--panel)}
+.mk.sel i{outline:3px solid var(--ink);outline-offset:3px}
+.mk b{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;font:600 11px var(--body);color:var(--ink);background:var(--glass);padding:2px 8px;border-radius:99px;border:1px solid var(--line)}
+.z-low .mk:not(.sel) b{display:none}
+.mk em{position:absolute;right:-12px;top:-10px;display:flex}
+.mk em .av{border:2px solid var(--bg);margin-left:-6px}
+.mk.priv i{border-style:dashed}
+.meDot{width:18px;height:18px;border-radius:50%;background:#3B82F6;border:3px solid #fff;box-shadow:0 0 0 7px rgba(59,130,246,.25)}
+.lf-river{stroke:var(--river);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.lf-road{stroke:var(--road);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.lf-park{fill:var(--park);fill-opacity:1;stroke:var(--park)}
+.lf-water{fill:var(--river);fill-opacity:1;stroke:var(--river)}
+.lf-coast{stroke:var(--sand);fill:none;stroke-linecap:round}
+.lf-lbl{background:none;border:0}
+.lf-lbl span{display:block;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none}
+.lf-hood span{font:600 10px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;opacity:.75}
+.lf-street span{font:10px var(--mono);color:var(--muted);opacity:.85}
+.lf-city span{font:600 22px var(--display);color:var(--muted);opacity:.5}
+
+/* ---------- novo evento (mapa no topo) ---------- */
+.maptop-spacer{height:300px;position:relative;pointer-events:none}
+.maptop-spacer .backbtn{position:absolute;top:14px;left:14px;pointer-events:auto}
+.crosshair{position:absolute;left:50%;top:150px;transform:translate(-50%,-92%);color:var(--acc);filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+.pinlabel{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);padding:6px 12px;border-radius:99px;background:var(--glass);border:1px solid var(--line);font-size:12px;font-weight:600;white-space:nowrap}
+.sheetlike{pointer-events:auto;background:var(--bg);border-radius:24px 24px 0 0;margin-top:-18px;position:relative;min-height:calc(100% - 282px);padding-bottom:110px}
+.pform{display:flex;flex-direction:column;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;background:var(--c);border:2px solid var(--bg)}
+.sw.on{outline:2px solid var(--ink);outline-offset:2px}
+
+/* ---------- área do produtor ---------- */
+.evtabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.evtabs::-webkit-scrollbar{display:none}
+.evtabs button{flex:none;display:flex;gap:6px;align-items:center;padding:7px 12px;border-radius:99px;border:1px solid var(--line);font-size:12px;font-weight:600;background:var(--panel)}
+.evtabs i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.evtabs .on{border-color:var(--ink);background:var(--panel-2)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{padding:12px;border-radius:16px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:3px;min-width:0}
+.kpi .v{font-family:var(--display);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .v small{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .s{font-size:11px;color:var(--muted)}
+.kpi .bar{height:5px;border-radius:99px;background:var(--panel-2);overflow:hidden;margin-top:4px}
+.kpi .bar i{display:block;height:100%;background:var(--acc)}
+.card{padding:14px;border-radius:18px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;position:relative;min-width:0}
+.card h3{font-size:15px}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{fill:var(--muted);font:10px var(--mono)}
+.chart .sbar{fill:var(--acc)}
+.chart .sbar:hover{opacity:.75}
+.chart .lbl{fill:var(--ink);font:600 10px var(--mono)}
+.ctip{position:absolute;pointer-events:none;padding:4px 8px;border-radius:8px;background:var(--ink);color:var(--bg);font:600 11px var(--mono);white-space:nowrap;transform:translate(-50%,-130%);z-index:5}
+.lote{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;align-items:center;font-size:13px}
+.lote .bar{grid-column:1/-1;height:6px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.lote .bar i{display:block;height:100%;background:var(--acc);border-radius:99px}
+.stc{font:10px var(--mono);padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-left:6px}
+.stc.sold{color:var(--danger);border-color:var(--danger)}
+.stc.on{color:var(--ok);border-color:var(--ok)}
+.hbar{display:grid;grid-template-columns:52px 1fr 36px;gap:8px;align-items:center;font-size:12px}
+.hbar .bar{height:8px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.hbar .bar i{display:block;height:100%;background:var(--lilac);border-radius:0 4px 4px 0}
+.hbar span:last-child{font-family:var(--mono);text-align:right;color:var(--muted)}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats3 b{display:block;font-family:var(--display);font-size:17px}
+.stats3 span{font-size:11px;color:var(--muted)}
+.fin{display:grid;gap:6px;font-size:13px}
+.fin div{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.fin .tot{border-top:1px solid var(--line);padding-top:6px;font-weight:600}
+.scanner{position:relative;aspect-ratio:1;max-width:270px;width:100%;margin:0 auto;border-radius:26px;background:radial-gradient(circle,var(--panel-2),var(--panel));border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:13px;padding:30px}
+.scanner .cn{position:absolute;width:36px;height:36px;border:4px solid var(--acc)}
+.scanner .tl{top:18px;left:18px;border-right:0;border-bottom:0;border-radius:12px 0 0 0}
+.scanner .tr{top:18px;right:18px;border-left:0;border-bottom:0;border-radius:0 12px 0 0}
+.scanner .bl{bottom:18px;left:18px;border-right:0;border-top:0;border-radius:0 0 0 12px}
+.scanner .br{bottom:18px;right:18px;border-left:0;border-top:0;border-radius:0 0 12px 0}
+.laser{position:absolute;left:14%;right:14%;height:2px;background:var(--acc);box-shadow:0 0 14px var(--acc);top:20%;animation:laser 1.8s ease-in-out infinite alternate}
+@keyframes laser{to{top:80%}}
+.scanres{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;animation:fade .2s;padding:20px;text-align:center}
+.scanres.ok{background:#127A4C}
+.scanres.bad{background:#B83434}
+.scanres b{font-family:var(--display);font-size:22px}
+.cicount{display:flex;flex-direction:column;gap:6px}
+.cicount b{font-family:var(--display);font-size:28px;font-variant-numeric:tabular-nums}
+.cicount .bar{height:8px;border-radius:99px;background:var(--panel-2);overflow:hidden}
+.cicount .bar i{display:block;height:100%;background:var(--ok)}
+
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{transform:scale(.4)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:760px){
+  .stage{gap:28px;padding-block:12px}
+  .guide{order:2;max-width:none;width:100%}
+}
+@media (max-width:480px){
+  .phone{width:100%;height:calc(100vh - 24px);height:calc(100dvh - 24px);border-width:6px;border-radius:30px;min-height:560px}
+}
+/* ==========================================================================
+   Versão F: passada "unslop" (unslop por Damir Sokolovsky, @heydamir, CC BY 4.0)
+   Direção: noturno, quente, de turma. Mundo: a cidade à noite, luz de poste
+   amarelada, ingresso de papel. O brilho fica só no mapa aceso e nos ingressos.
+   Assinatura: a luz âmbar de "aberto agora".
+   ========================================================================== */
+:root{--ease:cubic-bezier(.22,1,.36,1);--sodium:#F2A93B}
+
+/* tipografia: tamanho e cor fazem a hierarquia, não o peso */
+body{font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-weight:500;letter-spacing:0}
+b,strong{font-weight:600}
+.eyebrow{font-size:12px;text-transform:none;letter-spacing:0;font-family:var(--mono)}
+.eyebrow::first-letter{text-transform:uppercase}
+.price,.kpi .v,.stats3 b,.cicount b,.clock b,.count,.rl .v,.lines div,.fin div{font-variant-numeric:tabular-nums}
+.price{font-family:var(--mono);font-size:16px;font-weight:500}
+.ename{font-size:17px;font-weight:500}
+.citybtn b{font-size:15px;font-weight:600}
+
+/* botões: raio de controle, primário claro, destaque âmbar só onde importa */
+.btn{border-radius:10px;font-weight:600;border-color:var(--line)}
+.btn.sm{border-radius:8px}
+.btn.acc{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dock{border-radius:20px;padding:6px;box-shadow:0 12px 28px -12px rgba(0,0,0,.55)}
+.dock .side,.dock .main{border-radius:14px}
+.dock .main{background:var(--ink);color:var(--bg);font-weight:600;transition:transform .14s var(--ease),background-color .14s var(--ease)}
+.dock .main:active{transform:scale(.98)}
+.dock .side{transition:background-color .14s var(--ease)}
+.dock .badge{background:var(--sodium);color:#1A1206;font-weight:500}
+.go{border-radius:10px;font-weight:600;background:var(--ink);color:var(--bg)}
+.round{border-color:var(--line)}
+.round.like{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.wavebtn{border-radius:8px;font-weight:600;background:var(--ink);color:var(--bg)}
+.msg.me{background:var(--ink);color:var(--bg)}
+
+/* cartões e listas: raios aninhados, uma régua de 4px */
+.erow{border-radius:14px;padding:12px 16px;gap:12px}
+.erow .dotc{width:8px;height:8px}
+.pv{border-radius:16px;padding:16px}
+.pv::before,.ecard .ebar{display:none}
+.pv h2{font-size:24px;font-weight:500}
+.card{border-radius:16px;padding:16px;gap:12px}
+.kpi{border-radius:12px;padding:12px;gap:4px}
+.list{border-radius:16px}
+.thermo,.recv{border-radius:16px;padding:16px}
+.ncard,.seen-card,.door-list div{border-radius:12px}
+.sheet{border-radius:20px 20px 0 0;padding:12px 20px 24px;gap:16px}
+.sheet h3{font-size:20px}
+.payopt{border-radius:12px}
+.payopt.on,.seg button.on,.toggle.on,textarea.ta:focus{border-color:var(--ink);color:var(--ink);box-shadow:none}
+.payopt.on .dot{border-color:var(--ink)}
+.seg button{border-radius:10px}
+.seg button.on{font-weight:600}
+.switch.on{background:var(--ink)}
+.switch.on::after{background:var(--bg)}
+.field input,textarea.ta,.composer{border-radius:10px}
+.toast{border-radius:12px;font-weight:500}
+
+/* cores fora do conteúdo: superfícies neutras, sem degradês */
+.av{background:hsl(var(--h) 22% 30%);color:#EEF0F5;font-weight:600}
+.rh{background:var(--bg);border-bottom:1px solid var(--line);padding:16px}
+.rh h1{font-size:28px;line-height:1.1;font-weight:500;letter-spacing:-.01em}
+.backbtn{background:var(--panel-2)}
+.tile.text{background:var(--panel)}
+.ttext{font-weight:400}
+.const{background:var(--panel)}
+.const::before{opacity:.18}
+.cp.friend .av{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--ink)}
+.recv{background:var(--panel)}
+.st .ring2{background:var(--sodium)}
+.st.seen .ring2{background:var(--panel-2)}
+.swipe{border-radius:20px;box-shadow:0 12px 28px -14px rgba(0,0,0,.55)}
+.swipe .face{background:hsl(var(--h) 18% 22%)}
+.swipe .big{font-weight:500;color:rgba(238,240,245,.82)}
+.swipe .info h3{font-weight:500}
+.stamp2{font-weight:600}
+.seen-card.on{background:var(--panel-2);border-color:var(--ok)}
+.door-over .lk{background:var(--panel-2);color:var(--ink)}
+.door-list .ic{color:var(--muted)}
+.pill-new{border-radius:4px;background:none;color:var(--sodium);padding:0;font-size:12px}
+.tlike.on{color:var(--sodium)}
+
+/* rótulos em caixa baixa, sem espaçamento largo */
+.phead .tag,.tauthor .prod,.oncetag,.lf-hood span,.nm .flyer small,.openst{text-transform:none;letter-spacing:0}
+.phead .tag{background:none;padding:0;font-size:12px;color:var(--muted)}
+.phead .tag::first-letter,.openst::first-letter{text-transform:uppercase}
+.phead h2{font-size:22px;font-weight:500}
+.rail .now{letter-spacing:0;font-size:10px;text-transform:lowercase}
+.rail .now::first-letter{text-transform:uppercase}
+.oncetag{border-radius:4px;background:var(--ink);color:var(--bg);font-weight:500}
+
+/* relógio da sala: fases em tons neutros, a hora atual em âmbar */
+.hr{border-left-width:2px;--pc:var(--line)}
+.hr.esquenta,.hr.pista,.hr.depois{--pc:var(--line)}
+.hr.on{background:var(--panel-2);color:var(--ink);border-left-color:var(--sodium);border-radius:0 10px 10px 0;font-weight:500}
+.hr:hover{background:var(--panel)}
+
+/* filtros e abas: controles, não pílulas brilhantes */
+.filters button,.evtabs button{border-radius:10px;font-weight:500;font-size:13px}
+.filters button.on{background:var(--ink);color:var(--bg)}
+.evtabs .on{border-color:var(--ink)}
+.mode,.mode button{border-radius:10px}
+.citybtn,.mbtn{border-radius:14px}
+.mbtn.on{color:var(--ink);border-color:var(--ink)}
+.pinI{color:var(--sodium)}
+
+/* assinatura: a luz âmbar de "aberto agora" */
+.openst{font:500 12px var(--mono);padding:0;border:0;border-radius:0;margin-bottom:4px;color:var(--muted)}
+.openst.on{background:none;color:var(--sodium);border:0}
+.openst.on::before{width:7px;height:7px;margin-right:6px;background:var(--sodium);box-shadow:0 0 8px var(--sodium);animation:none;vertical-align:0}
+.openst.soon{color:var(--muted)}
+.realtag{color:var(--muted);border:0;padding:0;letter-spacing:0}
+.ecard{border-radius:16px;padding:12px 16px}
+.ecard.sel{border-color:color-mix(in srgb,var(--ink) 40%,transparent);box-shadow:none}
+.ecard .live{color:var(--sodium);font-weight:600}
+
+/* mapa: todas as luzes são a mesma luz de poste; aceso = aberto agora */
+.nm .glow{background:radial-gradient(circle,rgba(242,169,59,.85) 0,rgba(242,169,59,.32) 28%,transparent 68%);animation:none;transition:opacity .35s var(--ease),transform .35s var(--ease)}
+.nm .dot{background:#FFF4DE;box-shadow:0 0 0 3px var(--sodium),0 0 14px 2px rgba(242,169,59,.7)}
+.nm.sel .dot{box-shadow:0 0 0 3px var(--sodium),0 0 0 6px #FFF4DE,0 0 18px 4px rgba(242,169,59,.7)}
+.nm.off .dot{background:#59606F;opacity:.6;box-shadow:none}
+.nm.priv .dot{background:#FFF4DE;border:2px dashed #1A1206}
+/* os cartazes (zoom de perto) são papel colado no poste, cada um na cor do rolê */
+.nm .flyer{font-weight:600;border-radius:2px;box-shadow:2px 3px 0 rgba(0,0,0,.5)}
+.mk b{font-weight:600}
+.mk.sel i{animation:none}
+.lf-city span{font-weight:500}
+
+/* carteira: o ingresso de papel continua sendo o objeto rico da tela */
+.pk{border-radius:14px;font-weight:600;font-size:15px}
+.wc-front h3{font-weight:600;font-size:28px;letter-spacing:-.01em}
+.wc-front,.wc-back{border-radius:16px}
+.count{color:var(--ink)}
+
+/* área do produtor: um gráfico com uma cor só, hoje em âmbar */
+.kpi .v{font-family:var(--mono);font-size:16px;font-weight:500}
+.kpi .bar,.lote .bar,.hbar .bar,.cicount .bar,.trow .bar{height:4px;border-radius:2px}
+.kpi .bar i,.lote .bar i,.hbar .bar i{background:color-mix(in srgb,var(--ink) 55%,transparent);border-radius:2px}
+.cicount .bar i{background:var(--ok)}
+.chart .sbar{fill:color-mix(in srgb,var(--ink) 22%,transparent)}
+.chart .sbar.now{fill:var(--sodium)}
+.chart .sbar:hover{opacity:1;fill:color-mix(in srgb,var(--ink) 40%,transparent)}
+.chart .sbar.now:hover{fill:var(--sodium)}
+.chart .lbl{font-weight:500}
+.stc{border:0;padding:0;margin-left:8px;font-size:12px}
+.stats3 b{font-family:var(--mono);font-weight:500;font-size:17px}
+.cicount b{font-family:var(--mono);font-weight:500}
+.scanner{background:var(--panel);border-radius:20px}
+.scanner .cn{border-color:var(--ink);border-width:3px}
+.laser{background:var(--sodium);box-shadow:none}
+.scanres b{font-weight:600}
+.crosshair{color:var(--sodium)}
+
+/* cupom da mesa: papel quente, carimbo continua de carimbo */
+.receipt h2{font-weight:600;letter-spacing:0}
+
+/* movimento: só o que explica algo */
+.blip i,.sc.anim,.sc.anim::before,.sweep{animation:none}
+.sweep{opacity:.35}
+.okmark{animation:fade .3s var(--ease)}
+.sheet{animation:up .32s var(--ease)}
+.wallet.enter{animation:slidein .32s var(--ease)}
+@keyframes up{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+@keyframes slidein{from{transform:translateY(12px);opacity:0}}
+.swipe{transition:transform .22s var(--ease),opacity .22s var(--ease)}
+
+/* guia ao lado do celular (só no computador) */
+.guide .mark{font-weight:600;letter-spacing:-.02em}
+.guide .mark span{color:#A15C00}
+.step{border-radius:12px;transition:border-color .14s var(--ease)}
+.step:hover{border-color:#111827}
+.step b{color:#4B5565;font-weight:500}
+.step span{font-weight:600}
+/* celular de verdade: sem moldura, app ocupa a tela inteira (inclusive aberto pela Tela de Início) */
+@media (max-width:600px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{padding:0;margin:0;background:var(--bg)}
+  .stage{display:block;min-height:0;padding:0}
+  .guide{display:none}
+  .phone{position:fixed;left:0;right:0;top:0;bottom:0;width:auto;height:auto;min-height:0;max-width:none;
+    border:0!important;border-radius:0;box-shadow:none!important;
+}
+  .phone>.app,.phone>.map{top:env(safe-area-inset-top,0px)}
+  .dock{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .scroll{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+  .sheet{padding-bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+}
+</style>
+</head>
+<body>
+
+<!-- tela de login do protótipo -->
+<div id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-t">
+  <form id="gate-f" autocomplete="off" novalidate>
+    <div class="g-logo">rol<span>ê</span></div>
+    <div class="g-head"><h1 id="gate-t">Entrar no protótipo</h1><p>Acesso só para quem recebeu o convite.</p></div>
+    <label for="gate-n">Nome<input id="gate-n" maxlength="40" placeholder="Como quer ser chamado" autocomplete="off"></label>
+    <label for="gate-p">Senha<input id="gate-p" type="password" inputmode="numeric" maxlength="20" placeholder="••••••" autocomplete="off"></label>
+    <p id="gate-e" class="g-err" role="alert" hidden>Senha incorreta. Tente de novo.</p>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+<style>
+#gate{position:fixed;inset:0;z-index:99999;background:#FFFFFF;color:#121731;display:flex;align-items:center;justify-content:center;
+  padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light}
+#gate[hidden]{display:none!important}
+#gate form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:16px}
+#gate .g-logo{font:600 56px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.05em}
+#gate .g-logo span{color:#A15C00}
+#gate .g-head{display:flex;flex-direction:column;gap:4px}
+#gate h1{font-size:22px;line-height:1.2;margin:0;font-weight:600;letter-spacing:-.01em}
+#gate p{margin:0;color:#5A6185;font-size:14px}
+#gate label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5A6185}
+#gate input{font:16px system-ui,-apple-system,"Segoe UI",sans-serif;padding:13px 14px;border-radius:12px;border:1px solid #D2D7EA;background:#FFFFFF;color:#121731;outline:none}
+#gate input:focus{border-color:#121731;box-shadow:0 0 0 3px rgba(18,23,49,.12)}
+#gate button{font:600 16px system-ui,-apple-system,"Segoe UI",sans-serif;padding:14px;border-radius:12px;border:0;background:#121731;color:#FFFFFF;cursor:pointer;margin-top:4px}
+#gate button:focus-visible{outline:3px solid #A15C00;outline-offset:2px}
+#gate .g-err{color:#C73636;font-weight:600}
+#gate.g-shake form{animation:gshake .32s}
+@keyframes gshake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@media (prefers-reduced-motion:reduce){#gate.g-shake form{animation:none}}
+</style>
+<script>
+(function(){
+  var KEY='role-acesso', OK='7bb0e2f2', g=document.getElementById('gate');
+  function h(s){ var x=5381; for(var i=0;i<s.length;i++){ x=((x<<5)+x+s.charCodeAt(i))>>>0; } return x.toString(16); }
+  try{ if(localStorage.getItem(KEY)===OK){ g.hidden=true; return; } }catch(e){}
+  var n=document.getElementById('gate-n'), p=document.getElementById('gate-p'), err=document.getElementById('gate-e');
+  setTimeout(function(){ try{ n.focus(); }catch(e){} },50);
+  document.getElementById('gate-f').addEventListener('submit',function(ev){
+    ev.preventDefault();
+    if(!n.value.trim()){ err.textContent='Digite um nome para entrar.'; err.hidden=false; n.focus(); return; }
+    if(h(p.value.trim())===OK){
+      try{ localStorage.setItem(KEY,OK); localStorage.setItem('role-nome',n.value.trim()); }catch(e){}
+      g.hidden=true;
+    } else {
+      err.textContent='Senha incorreta. Tente de novo.'; err.hidden=false; p.value=''; p.focus();
+      g.classList.remove('g-shake'); void g.offsetWidth; g.classList.add('g-shake');
+    }
+  });
+})();
+</script>
+
+<div class="stage">
+  <aside class="guide">
+    <div class="mark">rol<span>ê</span> F</div>
+    <p>A versão E com o visual revisto: tons escuros neutros, uma luz âmbar só no que está aberto agora, e a cor guardada para os cartazes no mapa e os ingressos de papel.</p>
+    <div class="steps">
+      <button class="step" data-a="guide" data-id="city"><b>01</b><span>Escolher a cidade<small>Pelo GPS ou pela lista de cidades</small></span></button>
+      <button class="step" data-a="guide" data-id="map"><b>02</b><span>Cidade acesa<small>"Aberto agora" pelo horário real; aproxime o zoom para ver os cartazes</small></span></button>
+      <button class="step" data-a="guide" data-id="room"><b>03</b><span>Sala da festa<small>Esquenta, pista e depois</small></span></button>
+      <button class="step" data-a="guide" data-id="prod"><b>P1</b><span>Painel do produtor<small>Vendas, lotes, público e repasses</small></span></button>
+      <button class="step" data-a="guide" data-id="prodNew"><b>P2</b><span>Criar evento no mapa<small>Arraste o mapa pra marcar o local</small></span></button>
+      <button class="step" data-a="guide" data-id="checkin"><b>P3</b><span>Check-in na porta<small>Leitura do QR do ingresso</small></span></button>
+      <button class="step" data-a="guide" data-id="mesa"><b>R$</b><span>A mesa do churrasco<small>A conta dividida em cupom</small></span></button>
+    </div>
+    <div class="steps" hidden>
+      <button class="step" data-a="guide" data-id="radar"><b>01</b><span>Radar da noite<small>Festas por distância; tamanho = quantas pessoas vão</small></span></button>
+      <button class="step" data-a="guide" data-id="buy"><b>02</b><span>Comprar e abrir a sala<small>A porta só abre com ingresso</small></span></button>
+      <button class="step" data-a="guide" data-id="esquenta"><b>21h</b><span>Esquenta<small>Quem vai, acenos e mural com fotos e vídeos</small></span></button>
+      <button class="step" data-a="guide" data-id="pista"><b>01h</b><span>Na pista<small>Stories ao vivo, visualização única, lotação</small></span></button>
+      <button class="step" data-a="guide" data-id="depois"><b>07h</b><span>Depois<small>"Quem você viu?" e o álbum da noite</small></span></button>
+      <button class="step" data-a="guide" data-id="mesa"><b>R$</b><span>A mesa do churrasco<small>A conta vira um cupom dividido</small></span></button>
+      <button class="step" data-a="guide" data-id="wallet"><b>QR</b><span>Carteira<small>Toque no ingresso pra virar</small></span></button>
+    </div>
+    <button class="reset" data-a="reset">Reiniciar protótipo</button>
+  </aside>
+  <div class="phone"><div id="map" class="map" aria-label="Mapa da cidade"></div><div id="app" class="app"></div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $app=document.getElementById('app');
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const I={
+  back:'<path d="M15 5l-7 7 7 7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+  heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  hand:'<path d="M7 11V6.5a1.5 1.5 0 0 1 3 0V11M10 10V5a1.5 1.5 0 0 1 3 0v5M13 10V6a1.5 1.5 0 0 1 3 0v6M16 11.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-.5A6.5 6.5 0 0 1 6 17.5L4.2 13.6a1.4 1.4 0 0 1 2.4-1.4L7 13"/>',
+  wallet:'<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2M6 6l9-3 1 3"/>',
+  radar:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l6-6"/>',
+  list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>', image:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
+  play:'<path d="M8 5v14l11-7z" fill="currentColor"/>', send:'<path d="M4 12l16-8-6 16-3-6z"/>', copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.5 4.5 4"/>',
+  bolt:'<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>', shield:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', chat:'<path d="M4 5h16v11H9l-5 4z"/>',
+  pin:'<path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>', chev:'<path d="M6 9l6 6 6-6"/>',
+  map:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>', locate:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>', minus:'<path d="M5 12h14"/>', scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/>'
+};
+const ic=(n,s=22,w=1.9)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+const initials=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const av=(n,h,s=40)=>`<span class="av" style="--h:${h};width:${s}px;height:${s}px;font-size:${Math.round(s*.4)}px">${esc(initials(n))}</span>`;
+
+const EVENTS=[
+  {id:'neon',name:'Baile Neon',date:'Sáb, 6 dez',time:'23h às 6h',place:'Galpão Leopoldina',price:60,lote:'2º lote',going:412,lat:-23.5268,lng:-46.7352,city:'sp',when:'fds',c:'#FF5DA2',producer:'Coletivo Faísca',friends:[['Rafa',200],['Bia',340],['Diego',220]]},
+  {id:'sunset',name:'Sunset no Terraço',date:'Dom, 7 dez',time:'16h às 23h',place:'Rooftop Pinheiros',price:45,lote:'1º lote',going:186,lat:-23.5663,lng:-46.6935,city:'sp',when:'fds',c:'#FFB23F',producer:'Terraço Club',friends:[['Nanda',300]]},
+  {id:'poli',name:'Calourada da Poli',date:'Sex, 12 dez',time:'22h às 5h',place:'Clube Atlético · Butantã',price:35,lote:'Lote promocional',going:893,lat:-23.5716,lng:-46.7088,city:'sp',when:'prox',c:'#5BC0FF',producer:'Atlética Poli',friends:[]}
+];
+const evById=id=>EVENTS.find(e=>e.id===id);
+const MESA_C='#B9A6FF';
+
+const PEOPLE={
+  neon:[
+    {n:'Júlia',a:24,h:330,bio:'Vou pela pista de house e fico pelo after.',tags:['House','Fotografia'],w:'Vai com 2 amigas',liked:true},
+    {n:'Thiago',a:27,h:200,bio:'Designer. Danço mal, mas com convicção.',tags:['Funk','Design'],w:'Vai sozinho',liked:false},
+    {n:'Marina',a:23,h:20,bio:'Se tocar Anitta, eu tô na frente do palco.',tags:['Pop','Open bar'],w:'Vai com 4 amigos',liked:true},
+    {n:'Duda',a:25,h:270,bio:'Primeira vez no Neon. Me indica um drink?',tags:['Techno','Vinil'],w:'Vai com 1 amiga',liked:false},
+    {n:'Gabriel',a:26,h:160,bio:'Chego cedo pra pegar o primeiro set.',tags:['House','Skate'],w:'Vai com 3 amigos',liked:true},
+    {n:'Lari',a:22,h:45,bio:'Procurando gente pra dividir Uber na volta.',tags:['Funk','Moda'],w:'Vai com 2 amigas',liked:false}
+  ],
+  sunset:[
+    {n:'Bruno',a:28,h:210,bio:'Fotógrafo de pôr do sol nas horas vagas.',tags:['Disco','Foto'],w:'Vai com 1 amigo',liked:true},
+    {n:'Clara',a:26,h:350,bio:'Trago o protetor solar e o bom humor.',tags:['Drinks','Yoga'],w:'Vai com 3 amigas',liked:false},
+    {n:'Rafael',a:29,h:120,bio:'Vinil, vinho e vista bonita.',tags:['Vinil','Vinho'],w:'Vai sozinho',liked:true}
+  ],
+  poli:[
+    {n:'Isa',a:20,h:300,bio:'Eng. civil, 2º ano. Bora fazer amizade!',tags:['Sertanejo','Vôlei'],w:'Vai com a turma',liked:true},
+    {n:'Matheus',a:21,h:180,bio:'Bateria da Poli. Me acha perto do palco.',tags:['Samba'],w:'Vai com a bateria',liked:false},
+    {n:'Bea',a:19,h:30,bio:'Caloura e perdida. Me adota?',tags:['Pop','Séries'],w:'Vai com 2 amigas',liked:true}
+  ]
+};
+const GHOSTS=[['Ana',15],['Pedro',190],['Lívia',320],['Otávio',95],['Sofia',260],['Enzo',140],['Nina',5],['Caíque',230],['Helena',290]];
+const POS_REAL=[[20,24],[64,18],[42,50],[80,50],[16,74],[58,80]];
+const POS_GHOST=[[36,32],[88,26],[30,48],[70,36],[50,26],[6,46],[92,76],[36,90],[76,92]];
+const POS_FRIEND=[[32,68],[88,9],[46,10]];
+
+const HOURS=['20h','21h','22h','23h','00h','01h','02h','03h','04h','05h','06h','07h','08h'];
+const phaseOf=i=>i<3?'esquenta':i<10?'pista':'depois';
+
+let PID=0;
+function freshState(){
+  return {
+    screen:'home', stack:[], mode:'mapa', sel:'neon', ev:null, hour:1, owned:{sunset:true}, sheet:null, toast:null, wallet:false, flip:{},
+    clock:23, city:'sp', userPos:[-23.5613,-46.6563], gps:false, locating:false, filter:'tudo', prodEv:'neon', pnAge:'18', pnColor:'#FF7A59', pnRules:{match:true,mural:true,once:true,lista:true}, scanN:0, scanRes:null,
+    prod:{name:'Coletivo Faísca', events:['neon'],
+      stats:{neon:{daily:[3,5,8,6,12,18,25,22,30,41,38,52,64,88], lotes:[{n:'1º lote',p:40,sold:200,cap:200},{n:'2º lote',p:60,sold:212,cap:300},{n:'3º lote',p:80,sold:0,cap:100}], checkins:[], paid:12000}},
+      rules:{neon:{match:true,mural:true,once:true,lista:true}}},
+    waved:{}, passed:{}, matches:[{n:'Bruno',a:28,h:210,ev:'sunset',msgs:[{me:false,t:'E aí! Vai chegar pro pôr do sol mesmo?'}],unread:1}],
+    myLikes:{}, opened:{}, seenStory:{}, viewer:null, draft:null, visibility:'visivel', firstMsg:false, onlyVerified:true,
+    posts:{
+      neon:[
+        {who:'Coletivo Faísca',h:300,prod:true,t:'2 h',txt:'Line-up fechado: DJ Rosa, Baile do Nego e set surpresa às 3h.',likes:128,media:{kind:'photo',scene:'palco',mh:220,cap:'Montagem do palco'}},
+        {who:'Marina',h:20,t:'45 min',txt:'Alguém da Zona Sul quer dividir carro? Saio às 22h30 da Vila Mariana.',likes:14},
+        {who:'Júlia',h:330,t:'1 h',txt:'O esquenta já começou',likes:52,media:{kind:'video',scene:'bar',dur:14,mh:250}},
+        {who:'Thiago',h:200,t:'5 min',txt:'Look de hoje',likes:9,media:{kind:'photo',scene:'look',once:true,mh:200}},
+        {who:'Coletivo Faísca',h:300,prod:true,t:'40 min',txt:'Prévia do set surpresa. Abre uma vez só.',likes:301,media:{kind:'video',scene:'pista',dur:10,once:true,mh:180}},
+        {who:'Gabriel',h:160,t:'20 min',txt:'Bar do Zé às 22h. Quem tiver ingresso, cola!',likes:37,media:{kind:'photo',scene:'bar',mh:150}}
+      ],
+      sunset:[
+        {who:'Terraço Club',h:20,prod:true,t:'1 h',txt:'O pôr do sol é às 18h52. Chega antes!',likes:64,media:{kind:'photo',scene:'sunset',mh:230}},
+        {who:'Clara',h:350,t:'30 min',txt:'Tem lugar pra sentar ou é tudo em pé?',likes:5}
+      ],
+      poli:[{who:'Atlética Poli',h:160,prod:true,t:'3 h',txt:'Ônibus saindo do Biênio às 21h30. Vagas limitadas.',likes:211}]
+    },
+    stories:{
+      neon:[
+        {who:'Coletivo Faísca',h:300,prod:true,t:'agora',media:{kind:'video',scene:'palco',dur:8,cap:'Abriu a pista principal'}},
+        {who:'Marina',h:20,t:'2 min',media:{kind:'video',scene:'pista',dur:7,once:true}},
+        {who:'Gabriel',h:160,t:'5 min',media:{kind:'photo',scene:'bar',cap:'Fila do bar andando rápido'}},
+        {who:'Júlia',h:330,t:'9 min',media:{kind:'video',scene:'pista',dur:9}},
+        {who:'Rafa',h:200,t:'12 min',media:{kind:'photo',scene:'palco',once:true}}
+      ]
+    },
+    album:{
+      neon:[
+        {who:'Coletivo Faísca',h:300,prod:true,t:'07h',txt:'Obrigado, Neon! Fotos oficiais no ar.',likes:540,media:{kind:'photo',scene:'palco',mh:240}},
+        {who:'Júlia',h:330,t:'06h',txt:'',likes:88,media:{kind:'photo',scene:'amanhecer',mh:180}},
+        {who:'Duda',h:270,t:'05h',txt:'Melhor set do ano',likes:61,media:{kind:'video',scene:'pista',dur:12,mh:200}},
+        {who:'Gabriel',h:160,t:'06h',txt:'Saída do galpão com o dia nascendo',likes:40,media:{kind:'photo',scene:'amanhecer',mh:150}}
+      ]
+    },
+    churras:{
+      name:'Churras da Laje', type:'Churrasco', lat:-23.5536, lng:-46.6897, date:'Sáb, 13 dez · 13h', place:'Casa do Rafa · Vila Madalena', code:'LAJE-1312',
+      items:[{n:'Carnes',v:320,c:'comida'},{n:'Carvão e gelo',v:70,c:'comida'},{n:'Cerveja e caipirinha',v:240,c:'bebida'},{n:'Refri e água',v:45,c:'comida'},{n:'Pão de alho e farofa',v:38,c:'comida'}],
+      guests:[{n:'Você',h:280,drinks:true,paid:true,host:true},{n:'Rafa',h:200,drinks:true,paid:true},{n:'Bia',h:340,drinks:false,paid:true},{n:'Caio',h:30,drinks:true,paid:false},{n:'Nanda',h:300,drinks:true,paid:true},{n:'Léo',h:150,drinks:false,paid:false},{n:'Carol',h:10,drinks:true,paid:false},{n:'Diego',h:220,drinks:true,paid:true},{n:'Paty',h:260,drinks:false,paid:true},{n:'Vini',h:100,drinks:true,paid:false}],
+      posts:[
+        {who:'Rafa',h:200,t:'ontem',txt:'Churrasqueira testada e aprovada',likes:4,media:{kind:'photo',scene:'churras',mh:170}},
+        {who:'Bia',h:340,t:'2 h',txt:'Mais algum vegetariano? Levo legumes e queijo coalho.',likes:6}
+      ]
+    }
+  };
+}
+let S=freshState();
+
+/* ---------- utilidades ---------- */
+function go(screen,extra={}){ S.stack.push({screen:S.screen,ev:S.ev}); Object.assign(S,{screen},extra); S.sheet=null; render(true); }
+function back(){ const p=S.stack.pop(); if(p){ S.screen=p.screen; S.ev=p.ev; } else S.screen='home'; S.sheet=null; render(true); }
+let toastTimer; function toast(m){ S.toast=m; render(); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{S.toast=null;render();},2600); }
+const allPosts=()=>[...Object.values(S.posts).flat(),...Object.values(S.stories).flat(),...Object.values(S.album).flat(),...S.churras.posts];
+const findPost=pid=>allPosts().find(p=>p.id===pid);
+const kindName=m=>m.kind==='video'?'Vídeo':'Foto';
+function qr(seed){ let s=0; for(const c of seed) s=(s*31+c.charCodeAt(0))>>>0; const rnd=()=>(s=(s*1664525+1013904223)>>>0)/4294967296; const N=25; let r='';
+  const inF=(x,y)=>(x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9);
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++) if(!inF(x,y)&&rnd()>.52) r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`;
+  const f=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3"/>`;
+  return `<svg viewBox="0 0 25 25" fill="#14101A" shape-rendering="crispEdges" aria-label="QR code">${r}${f(0,0)}${f(N-7,0)}${f(0,N-7)}</svg>`; }
+const qrBucket=()=>Math.floor(Date.now()/30000), qrLeft=()=>30-(Math.floor(Date.now()/1000)%30);
+function calc(){ const c=S.churras; const food=c.items.filter(i=>i.c!=='bebida').reduce((a,i)=>a+i.v,0), drink=c.items.filter(i=>i.c==='bebida').reduce((a,i)=>a+i.v,0);
+  const n=c.guests.length, d=c.guests.filter(g=>g.drinks).length, fs=n?food/n:0, ds=d?drink/d:0; const share=g=>Math.round((fs+(g.drinks?ds:0))*100)/100;
+  return {food,drink,fs,ds,share,total:food+drink,got:c.guests.filter(g=>g.paid).reduce((a,g)=>a+share(g),0),n,d}; }
+const received=()=>EVENTS.filter(e=>S.owned[e.id]).flatMap(e=>PEOPLE[e.id].map((p,i)=>({p,ev:e.id,i}))).filter(x=>x.p.liked&&!S.waved[x.ev+'|'+x.i]);
+
+/* ---------- mídia ---------- */
+function mediaInner(m){ if(m.url) return m.kind==='video'?`<video src="${m.url}" muted playsinline preload="metadata"></video>`:`<img src="${m.url}" alt="">`; return `<div class="sc sc-${m.scene}"></div>`; }
+function mediaHTML(p){
+  const m=p.media; if(!m) return ''; const mh=`style="--mh:${m.mh||190}px"`;
+  if(m.once){
+    if(S.opened[p.id]) return `<div class="media opened"><div class="once-over"><span class="one">1</span><div><b>${kindName(m)} aberto</b><br><small>Não dá pra ver de novo.</small></div></div></div>`;
+    return `<button class="media once" ${mh} data-a="view" data-id="${p.id}">${mediaInner(m)}<div class="once-over"><span class="one">1</span><b>${kindName(m)} de visualização única</b><small>Abre uma vez só</small></div></button>`;
+  }
+  return `<button class="media" ${mh} data-a="view" data-id="${p.id}">${mediaInner(m)}${m.kind==='video'?`<span class="playbtn">${ic('play',22)}</span>${m.dur?`<span class="dur">0:${String(m.dur).padStart(2,'0')}</span>`:''}`:''}${m.cap?`<span class="cap">${esc(m.cap)}</span>`:''}</button>`;
+}
+function tile(p){
+  if(!p.id) p.id='p'+(++PID); const on=S.myLikes[p.id];
+  const head=`<div class="tauthor">${av(p.who,p.h,22)}<b>${esc(p.who)}</b>${p.prod?'<span class="prod">prod</span>':''}<span>· ${p.t}</span></div>`;
+  const body=p.media?mediaHTML(p)+(p.txt?`<p class="tcap">${esc(p.txt)}</p>`:''):`<p class="ttext">${esc(p.txt)}</p>`;
+  return `<article class="tile${p.media?'':' text'}" style="--th:${p.h}">${body}${head}<button class="tlike${on?' on':''}" data-a="like" data-id="${p.id}" aria-label="Curtir">${ic('heart',13,2.2)}${p.likes+(on?1:0)}</button></article>`;
+}
+const wall=list=>`<div class="wall">${list.map(tile).join('')}</div>`;
+
+/* ---------- home ---------- */
+function blipPos(km,ang){ const r=Math.min(km/10,1)*44, a=ang*Math.PI/180; return `left:${(50+Math.cos(a)*r).toFixed(1)}%;top:${(50+Math.sin(a)*r).toFixed(1)}%`; }
+function radarHTML(){
+  const rings=[[2,8.8],[5,22],[10,44]].map(([k,r])=>`<span class="ring" style="width:${r*2}%;height:${r*2}%"><span>${k} km</span></span>`).join('');
+  const blips=EVENTS.map(e=>{ const s=Math.min(54,Math.round(16+Math.sqrt(e.going)*1.3));
+    return `<button class="blip${S.sel===e.id?' sel':''}" style="${blipPos(e.km,e.ang)};--c:${e.c};--s:${s}px" data-a="sel" data-id="${e.id}" aria-label="${e.name}, ${km(e)} km"><i></i>${e.friends.length?`<span class="fr">${e.friends.slice(0,2).map(([n,h])=>av(n,h,20)).join('')}</span>`:''}<span class="blab">${e.name}<small>${km(e)} km · ${e.going}</small></span></button>`; }).join('');
+  const mesa=`<button class="blip${S.sel==='mesa'?' sel':''}" style="${blipPos(2.2,22)};--c:${MESA_C};--s:20px" data-a="sel" data-id="mesa" aria-label="${esc(S.churras.name)}"><i></i><span class="blab">${esc(S.churras.name)}<small>privado · 10</small></span></button>`;
+  return `<div class="radar"><div class="disc"><div class="sweep"></div></div>${rings}<span class="me"><i></i>você</span>${blips}${mesa}</div>
+    <div class="legend"><span><i style="--c:#FF5DA2"></i>festa</span><span><i style="--c:${MESA_C}"></i>rolê privado</span><span>tamanho = quantos vão</span></div>`;
+}
+function listHTML(){
+  return `<div style="display:flex;flex-direction:column;gap:8px">${cityEvents().sort((a,b)=>dist(a)-dist(b)).map(e=>`<button class="erow" style="--c:${e.c}" data-a="room" data-id="${e.id}"><span class="dotc"></span><span class="grow"><b>${e.name}</b><small>${km(e)} km · ${e.date} · ${e.going} vão</small></span><span class="price" style="font-size:15px">${S.owned[e.id]?'Você vai':priceTxt(e)}</span></button>`).join('')}
+    ${showMesa()?`<button class="erow" style="--c:${MESA_C}" data-a="mesa"><span class="dotc"></span><span class="grow"><b>${esc(S.churras.name)}</b><small>${km(S.churras)} km · privado · ${S.churras.guests.length} convidados</small></span></button>`:''}</div>`;
+}
+function preview(){
+  if(S.sel==='mesa'){ const k=calc(), me=S.churras.guests[0];
+    return `<section class="pv" style="--c:${MESA_C}"><p class="eyebrow">2,2 km · rolê privado · ${esc(S.churras.date)}</p><h2>${esc(S.churras.name)}</h2><p class="small muted">${esc(S.churras.place)}</p>
+      <div class="pv-act"><span class="price">${brl(k.share(me))}<span class="small muted" style="font-family:var(--body);font-weight:500"> sua parte</span></span><button class="btn acc" data-a="mesa">Abrir a mesa</button></div></section>`; }
+  const e=evById(S.sel), own=S.owned[e.id];
+  const fr=e.friends.length?`<div class="pv-row"><div class="stack">${e.friends.map(([n,h])=>av(n,h,28)).join('')}</div><span class="small">${e.friends.map(f=>f[0]).join(', ').replace(/, ([^,]*)$/,' e $1')} ${e.friends.length>1?'vão':'vai'}</span></div>`:`<p class="small muted">Ninguém que você conhece ainda. ${e.going} pessoas vão.</p>`;
+  return `<section class="pv" style="--c:${e.c}"><p class="eyebrow">${km(e)} km · ${e.date} · ${e.time}</p><h2>${e.name}</h2><p class="small muted">${e.place} · ${e.producer}</p>${fr}
+    <div class="pv-act"><span class="price">${own?'Você vai':priceTxt(e)}</span><button class="btn acc" data-a="room" data-id="${e.id}">${own?'Entrar na sala':'Ver a sala'}</button></div></section>`;
+}
+function walletCards(){
+  return [...EVENTS.filter(e=>S.owned[e.id]).map(e=>({id:e.id,name:e.name,sub:e.date,c:e.c,kind:'ticket'})),{id:'mesa',name:S.churras.name,sub:'privado',c:MESA_C,kind:'mesa'}];
+}
+function homeOld(){
+  const cards=walletCards();
+  return `<div class="pad">
+    <header class="hello"><div><p class="eyebrow">Sex, 5 dez · 21:40 · São Paulo</p><h1>O que rola perto de você</h1></div><button data-a="profile" aria-label="Perfil e privacidade">${av('Você',280,40)}</button></header>
+    <div class="mode" role="group" aria-label="Modo de visualização"><button class="${S.mode==='radar'?'on':''}" data-a="mode" data-id="radar">${ic('radar',15,2)}Radar</button><button class="${S.mode==='lista'?'on':''}" data-a="mode" data-id="lista">${ic('list',15,2)}Lista</button></div>
+    ${S.mode==='radar'?radarHTML()+preview():listHTML()}
+    <button class="peek" data-a="wallet" aria-label="Abrir carteira"><span class="eyebrow">Carteira · ${cards.length} ${cards.length===1?'item':'itens'}</span>${cards.map(c=>`<span class="pk" style="--c:${c.c}">${esc(c.name)}<small>${c.sub}</small></span>`).join('')}</button>
+  </div>`;
+}
+function walletHTML(){
+  if(!S.wallet) return '';
+  const k=calc();
+  const enter=S.walletEnter; S.walletEnter=false;
+  return `<div class="wallet${enter?' enter':''}" role="dialog" aria-label="Carteira"><div class="wtop"><h2>Carteira</h2><button class="vclose" data-a="closeWallet" aria-label="Fechar">${ic('x',20,2.2)}</button></div>
+    <div class="wlist">${walletCards().map(c=>{ const e=evById(c.id);
+      const front=`<button class="wc-front" data-a="flip" data-id="${c.id}"><div><p class="mono small" style="opacity:.7">${c.kind==='ticket'?'INGRESSO · '+e.lote.toUpperCase():'ROLÊ PRIVADO'}</p><h3>${esc(c.name)}</h3></div><div class="meta"><span>${c.kind==='ticket'?e.date+'<br>'+e.time:esc(S.churras.date)}</span><span>${c.kind==='ticket'?e.place:esc(S.churras.code)}</span></div></button>`;
+      const backS=c.kind==='ticket'
+        ? `<div class="wc-back"><div class="qr">${qr(c.id+qrBucket())}</div><div class="col"><b>${esc(c.name)}</b><span class="small muted">Inteira · ${e.lote}</span><span class="small">Novo código em <span class="count" data-count>${qrLeft()} s</span></span><button class="btn sm acc" data-a="room" data-id="${c.id}">Entrar na sala</button><button class="small muted" data-a="flip" data-id="${c.id}" style="text-align:left">Virar</button></div></div>`
+        : `<div class="wc-back"><div class="col"><span class="eyebrow">Sua parte</span><span class="price" style="font-size:30px">${brl(k.share(S.churras.guests[0]))}</span><span class="small" style="color:var(--ok)">Pago no Pix</span><button class="btn sm acc" data-a="mesa">Abrir a mesa</button><button class="small muted" data-a="flip" data-id="${c.id}" style="text-align:left">Virar</button></div></div>`;
+      return `<div class="wc${S.flip[c.id]?' flip':''}" data-card="${c.id}" style="--c:${c.c}"><div class="wc-in">${front}${backS}</div></div>`; }).join('')}
+      <p class="small muted" style="text-align:center">Toque num cartão para virar. O QR muda a cada 30 s, então print não entra.</p></div></div>`;
+}
+
+/* ---------- sala ---------- */
+function constellation(e){
+  const ppl=PEOPLE[e.id];
+  const real=ppl.map((p,i)=>{ const [x,y]=POS_REAL[i%POS_REAL.length]; const w=S.waved[e.id+'|'+i];
+    return `<button class="cp" style="left:${x}%;top:${y}%" data-a="person" data-id="${e.id}|${i}">${av(p.n,p.h,42)}${w?`<span class="wv">${ic('heart',12,2.2)}</span>`:''}${p.n}</button>`; }).join('');
+  const fr=e.friends.map(([n,h],i)=>{ const [x,y]=POS_FRIEND[i]; return `<span class="cp friend" style="left:${x}%;top:${y}%">${av(n,h,34)}${n}</span>`; }).join('');
+  const gh=GHOSTS.map(([n,h],i)=>{ const [x,y]=POS_GHOST[i]; return `<span class="cp ghost" style="left:${x}%;top:${y}%">${av(n,h,24)}</span>`; }).join('');
+  return `<div class="const">${gh}${fr}${real}<span class="cmore">${e.going?`+${Math.max(0,e.going-ppl.length-GHOSTS.length-e.friends.length)} pessoas`:'Ninguém comprou ainda'}</span></div>`;
+}
+function rail(){
+  return `<nav class="rail" aria-label="Relógio da noite"><span class="now">HORA</span>${HOURS.map((h,i)=>`<button class="hr ${phaseOf(i)}${i===S.hour?' on':''}" data-a="hour" data-id="${i}" aria-pressed="${i===S.hour}">${h}</button>`).join('')}</nav>`;
+}
+function door(e){
+  return `<div class="door">${constellation(e)}<div class="door-over"><span class="lk">${ic('lock',22,2)}</span><h3>Essa sala abre com o ingresso</h3><p class="small muted">${e.going} pessoas já estão lá dentro</p></div></div>
+    <div class="door-list"><div>${ic('users',18)}Veja quem vai e dê match com quem também vai</div><div>${ic('image',18)}Mural com fotos, vídeos e visualização única</div><div>${ic('bolt',18)}Durante a festa: stories ao vivo e lotação de cada pista</div><div>${ic('eye',18)}Depois: "Quem você viu?" abre o match por 48 h</div></div>`;
+}
+function phaseHTML(e){
+  const ph=phaseOf(S.hour), h=HOURS[S.hour];
+  if(ph==='esquenta') return `<div class="phead esquenta"><span class="tag">Esquenta · ${h}</span><h2>Faltam ${3-S.hour}h pra abrir</h2><p class="small muted">Conheça quem vai antes de chegar.</p></div>
+    <div class="sec"><h3>Match</h3><span class="hint">arraste o card ou use os botões</span></div>${deckHTML(e)}
+    <div class="sec"><h3>Quem vai</h3><span class="hint">toque pra ver o perfil</span></div>${constellation(e)}
+    <div class="sec"><h3>Mural</h3><button class="btn sm" data-a="compose" data-id="${e.id}">${ic('image',15)}Postar</button></div>${wall(S.posts[e.id])}`;
+  if(ph==='pista'){
+    const st=S.stories[e.id]||[];
+    const thermo=[['Pista principal',94],['Pista house',63],['Bar',41],['Área externa',72],['Banheiro',55]];
+    const near=PEOPLE[e.id].map((p,i)=>({p,i})).slice(0,3);
+    return `<div class="phead pista"><span class="tag">Na pista · ${h}</span><h2>${e.name} está rolando</h2><p class="small muted">Só quem está dentro vê o que rola agora.</p></div>
+      ${st.length?`<div class="sec"><h3>Ao vivo</h3><span class="hint">some em 24 h</span></div><div class="stories">${st.map(s=>{ if(!s.id) s.id='p'+(++PID); const seen=S.seenStory[s.id]||S.opened[s.id];
+        return `<button class="st${seen?' seen':''}" data-a="view" data-id="${s.id}"><span class="ring2">${av(s.who,s.h,54)}</span>${s.media.once?'<span class="b1">1</span>':''}${esc(s.who.split(' ')[0])}</button>`; }).join('')}</div>`:''}
+      <div class="sec"><h3>Lotação agora</h3><span class="hint">atualiza a cada 5 min</span></div>
+      <div class="thermo">${thermo.map(([n,v])=>`<div class="trow"><span>${n}</span><span class="bar"><i style="width:${v}%;background:${v>85?'var(--danger)':v>60?'var(--acc)':'var(--ok)'}"></i></span><span>${v}%</span></div>`).join('')}</div>
+      <div class="sec"><h3>Perto de você</h3><span class="hint">mesma pista</span></div>
+      <div class="near">${near.map(({p,i})=>{ const w=S.waved[e.id+'|'+i]; return `<div class="ncard">${av(p.n,p.h,46)}<b>${p.n}, ${p.a}</b><small>${['pista principal','bar','área externa'][i%3]}</small><button class="wavebtn${w?' done':''}" data-a="wave" data-id="${e.id}|${i}">${ic('heart',13,2.2)}${w?'Curtiu':'Curtir'}</button></div>`; }).join('')}</div>`;
+  }
+  const al=S.album[e.id]||[];
+  return `<div class="phead depois"><span class="tag">Depois · ${h}</span><h2>Quem você viu?</h2><p class="small muted">Marque quem chamou sua atenção. Se a pessoa também marcar você, vocês dão match. Fica aberto por 48 h.</p></div>
+    <div class="seen-grid">${PEOPLE[e.id].map((p,i)=>{ const w=S.waved[e.id+'|'+i]; return `<button class="seen-card${w?' on':''}" data-a="saw" data-id="${e.id}|${i}">${av(p.n,p.h,50)}${p.n}<span class="vi">${ic(w?'check':'eye',12,2.2)}${w?'Eu vi':'Marcar'}</span></button>`; }).join('')}</div>
+    ${al.length?`<div class="sec"><h3>Álbum da noite</h3><span class="hint">${al.length} posts</span></div>${wall(al)}`:''}`;
+}
+function room(){
+  const e=evById(S.ev), own=S.owned[e.id];
+  return `<header class="rh" style="--c:${e.c}"><button class="backbtn" data-a="back" aria-label="Voltar">${ic('back',20,2.2)}</button>
+      <div class="grow"><p class="eyebrow">${e.date} · ${e.time} · ${km(e)} km</p><h1>${e.name}</h1><p class="small muted">${e.place} · ${own?'<b style="color:var(--ok)">você tem ingresso</b>':e.going+' com ingresso'}</p></div></header>
+    <div class="room">${rail()}<div class="rc">${own?phaseHTML(e):door(e)}</div></div>`;
+}
+
+/* ---------- mesa ---------- */
+function mesa(){
+  const c=S.churras, k=calc(), pend=c.guests.filter(g=>!g.paid).length;
+  const slug=c.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+  return `<header class="rh" style="--c:${MESA_C}"><button class="backbtn" data-a="back" aria-label="Voltar">${ic('back',20,2.2)}</button>
+      <div class="grow"><p class="eyebrow">Rolê privado · ${esc(c.type)}</p><h1>A mesa</h1><p class="small muted">${c.guests.length} convidados · ${c.guests.length-pend} pagaram</p></div>
+      <button class="btn sm" data-a="newRole">${ic('plus',15,2.2)}Novo</button></header>
+    <div class="pad" style="padding-top:4px">
+      <div class="receipt">
+        <p class="ctr" style="opacity:.6">ROLÊ · CUPOM DO ROLÊ</p>
+        <h2>${esc(c.name)}</h2>
+        <p class="ctr">${esc(c.date)}<br>${esc(c.place)}</p>
+        <div class="rule"></div>
+        ${c.items.map((it,i)=>`<div class="rl"><span class="nm">${esc(it.n)}</span>${it.c==='bebida'?'<span class="tag-b">só quem bebe</span>':''}<span class="dots"></span><span class="v">${brl(it.v).replace('R$','').trim()}</span><button class="x" data-a="delItem" data-id="${i}" aria-label="Remover ${esc(it.n)}">×</button></div>`).join('')}
+        <form class="addrow" data-form="item"><input id="item-n" placeholder="+ item" required autocomplete="off"><input id="item-v" type="number" min="1" step="0.01" placeholder="R$" required>
+          <div class="full"><select id="item-c"><option value="comida">todos dividem</option><option value="bebida">só quem bebe</option></select><button type="submit">adicionar</button></div></form>
+        <div class="rule"></div>
+        <div class="rl tot"><span>TOTAL</span><span class="dots"></span><span class="v">${brl(k.total)}</span></div>
+        <div class="rl"><span>QUEM BEBE (${k.d})</span><span class="dots"></span><span class="v">${brl(k.fs+k.ds)}</span></div>
+        <div class="rl"><span>QUEM NÃO BEBE (${k.n-k.d})</span><span class="dots"></span><span class="v">${brl(k.fs)}</span></div>
+        <div class="rule"></div>
+        <p style="opacity:.6">CONVIDADOS · toque em "bebe" ou "pagar"</p>
+        ${c.guests.map((g,i)=>`<div class="guest"><span class="gn"><span>${esc(g.n)}${g.host?' (anfitrião)':''}</span><button class="drk${g.drinks?' on':''}" data-a="drinks" data-id="${i}">${g.drinks?'bebe':'não bebe'}</button></span><span class="v">${brl(k.share(g))}</span>${g.paid?'<span class="stamp">PAGO</span>':`<button class="payme" data-a="pay" data-id="${i}">PAGAR</button>`}</div>`).join('')}
+        <div class="rule"></div>
+        <div class="rl tot"><span>ARRECADADO</span><span class="dots"></span><span class="v">${brl(k.got)}</span></div>
+        <p class="ctr" style="opacity:.6">PIX · ${esc(c.code)}</p><div class="barcode"></div>
+      </div>
+      <div class="linkbox"><span id="invlink">role.app/m/${slug}</span><button class="btn sm" data-a="copy">${ic('copy',14)}Copiar convite</button></div>
+      <button class="btn block" data-a="addGuest">${ic('users',17)}Simular convidado aceitando</button>
+      <div class="sec"><h3>Mural da mesa</h3><button class="btn sm" data-a="compose" data-id="mesa">${ic('image',15)}Postar</button></div>
+      ${wall(c.posts)}
+    </div>`;
+}
+
+/* ---------- acenos ---------- */
+function acenos(){
+  const r=received();
+  return `<header class="rh" style="--c:var(--acc)"><button class="backbtn" data-a="back" aria-label="Voltar">${ic('back',20,2.2)}</button><div class="grow"><p class="eyebrow">só com quem vai às mesmas festas</p><h1>Matches</h1></div></header>
+    <div class="pad" style="padding-top:4px">
+      ${r.length?`<div class="recv"><div class="blurstack">${r.map(x=>av(x.p.n,x.p.h,44)).join('')}</div><b>${r.length} ${r.length===1?'pessoa curtiu':'pessoas curtiram'} você</b><p class="small muted">Você descobre quem foi quando der match no card dela, na sala da festa.</p><button class="btn acc" data-a="matchRoom" data-id="${r[0].ev}">Abrir o match do ${evById(r[0].ev).name}</button></div>`
+        :`<div class="recv"><b>Nenhuma curtida nova</b><p class="small muted">Compre um ingresso e abra o match da festa.</p></div>`}
+      <div class="sec"><h3>Matches</h3><span class="hint">cada um ligado a uma festa</span></div>
+      ${S.matches.length?`<div class="list">${S.matches.map((m,i)=>{ const e=evById(m.ev), last=m.msgs[m.msgs.length-1];
+        return `<button class="row" data-a="chat" data-id="${i}">${av(m.n,m.h,46)}<span class="grow"><b>${m.n}, ${m.a}</b><small>${last?esc((last.me?'Você: ':'')+last.t):'Match no '+e.name+'. Diga oi'}</small></span>${m.unread?'<span class="pill-new">nova</span>':`<span class="mono small muted">${e.name.split(' ')[0]}</span>`}</button>`; }).join('')}</div>`:''}
+    </div>`;
+}
+
+/* ---------- folhas ---------- */
+function sheetHTML(){
+  const sh=S.sheet; if(!sh) return ''; let b='';
+  if(sh.type==='buy'){ const e=evById(S.ev), fee=Math.round(e.price*.1*100)/100, tot=e.price+fee;
+    if(sh.step==='resumo') b=`<h3>${e.name}</h3><div class="lines"><div><span>Inteira · ${e.lote}</span><span>${priceTxt(e)}</span></div>${e.price==null?'<p class="small muted">A casa ainda não informou o preço. No app, ela cadastra os lotes e a compra acontece aqui.</p>':''}${e.price==null?'':`<div class="muted"><span>Taxa de serviço (10%)</span><span>${brl(fee)}</span></div><div class="tot"><span>Total</span><span>${brl(tot)}</span></div>`}</div>
+      ${[['pix','Pix','Aprovação na hora'],['card','Cartão de crédito','Em até 3x sem juros']].map(([k,l,d])=>`<button class="payopt${sh.pay===k?' on':''}" data-a="payopt" data-id="${k}"><span class="dot"></span><span><b>${l}</b><div class="small muted">${d}</div></span></button>`).join('')}
+      <button class="btn acc block" data-a="buyNext">${e.price==null?'Simular compra':'Pagar '+brl(tot)}</button><p class="small muted" style="text-align:center">Pagamento simulado. Nada é cobrado.</p>`;
+    if(sh.step==='pix') b=`<h3>Pague com Pix</h3><div class="center"><div class="qr" style="width:180px;height:180px">${qr('pix'+e.id)}</div><p class="small muted">Escaneie no app do banco. Expira em 10 min.</p></div><button class="btn acc block" data-a="pixOk">${ic('check',18,2.4)}Simular pagamento aprovado</button>`;
+    if(sh.step==='ok') b=`<div class="center"><span class="okmark">${ic('check',38,3)}</span><h3>A porta abriu</h3><p class="muted">Seu ingresso está na carteira. Lá dentro: ${e.going} pessoas, mural e match.</p></div><button class="btn acc block" data-a="enter">Entrar na sala</button>`;
+  }
+  if(sh.type==='person'){ const [ev,i]=sh.id.split('|'), p=PEOPLE[ev][+i], w=S.waved[sh.id];
+    b=`<div class="center">${av(p.n,p.h,88)}<h3>${p.n}, ${p.a}</h3><p class="small muted">${p.w} · ${ic('shield',13,2).replace('class="ic"','class="ic" style="display:inline;vertical-align:-2px"')} verificada</p><p>${p.bio}</p><div class="chips">${p.tags.map(t=>`<span class="chip">${t}</span>`).join('')}</div></div>
+      <button class="btn ${w?'':'acc'} block" data-a="wave" data-id="${sh.id}" ${w?'disabled':''}>${ic('heart',18,2.2)}${w?'Você curtiu':'Curtir '+p.n}</button>
+      <p class="small muted" style="text-align:center">${p.n} só fica sabendo se curtir você também.</p>`; }
+  if(sh.type==='match'){ const p=sh.p, e=evById(sh.ev);
+    b=`<div class="center"><p class="eyebrow">${e.name}</p><h3 style="font-size:28px">${sh.saw?'Vocês se viram':'Deu match'}</h3><div class="pair">${av('Você',280,84)}${av(p.n,p.h,84)}</div><p class="muted">${sh.saw?`Você e ${p.n} marcaram um ao outro depois da festa.`:`Você e ${p.n} curtiram um ao outro. Combinem de se achar na festa.`}</p></div>
+      <button class="btn acc block" data-a="chat" data-id="0">Mandar mensagem</button><button class="btn block" data-a="closeSheet">Continuar</button>`; }
+  if(sh.type==='chat'){ const m=S.matches[sh.i], e=evById(m.ev);
+    b=`<div class="pv-row">${av(m.n,m.h,40)}<div><b>${m.n}, ${m.a}</b><div class="small muted">Match no ${e.name}</div></div></div>
+      <div class="msgs">${m.msgs.length?m.msgs.map(x=>`<div class="msg${x.me?' me':''}">${esc(x.t)}</div>`).join(''):'<p class="small muted" style="text-align:center">Mande a primeira mensagem.</p>'}</div>
+      <form class="composer" data-form="msg"><input id="msg" placeholder="Mensagem…" autocomplete="off"><button class="btn acc sm" type="submit" aria-label="Enviar">${ic('send',16,2)}</button></form>`; }
+  if(sh.type==='compose'){ const d=S.draft;
+    b=`<h3>Postar no mural</h3><textarea class="ta" id="ctext" placeholder="${sh.scope==='mesa'?'Escreva pra galera do rolê…':'Escreva pra quem vai…'}"></textarea>
+      ${d?`<div class="draft"><div class="thumb">${d.kind==='video'?`<video src="${d.url}" muted playsinline></video>`:`<img src="${d.url}" alt="">`}</div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><b class="small">${kindName(d)} anexado</b><button type="button" class="toggle${d.once?' on':''}" data-a="onceToggle">${ic('eye',14,2)}Visualização única: ${d.once?'ligada':'desligada'}</button></div><button class="vclose" data-a="dropDraft" aria-label="Remover anexo">${ic('x',16,2.2)}</button></div>`
+        :`<label class="btn block" style="cursor:pointer">${ic('image',18)}Adicionar foto ou vídeo<input type="file" id="file-compose" accept="image/*,video/*" hidden></label>`}
+      <button class="btn acc block" data-a="publish">Publicar</button>`; }
+  if(sh.type==='profile'){
+    const vis=[['visivel','Visível'],['lista','Só na lista'],['invisivel','Invisível']];
+    b=`<div class="pv-row">${av('Você',280,52)}<div><b>Você</b><div class="small" style="color:var(--ok)">Identidade verificada · 18+</div></div></div>
+      <button class="btn block" data-a="prod">${ic('chart',18)}Área do produtor</button>
+      <h3>Quem me vê nas salas</h3><div class="seg">${vis.map(([k,l])=>`<button class="${S.visibility===k?'on':''}" data-a="vis" data-id="${k}">${l}</button>`).join('')}</div>
+      <p class="small muted">${S.visibility==='visivel'?'Você aparece em "Quem vai" e no match.':S.visibility==='lista'?'Você aparece em "Quem vai", mas não no match.':'Ninguém vê que você vai. O ingresso continua valendo.'}</p>
+      <div class="list"><button class="row" data-a="sw" data-id="firstMsg"><span class="grow"><b>Só eu começo a conversa</b><small>Matches não mandam a primeira mensagem</small></span><span class="switch${S.firstMsg?' on':''}"></span></button>
+      <button class="row" data-a="sw" data-id="onlyVerified"><span class="grow"><b>Só perfis verificados</b><small>Esconde quem não fez a selfie de verificação</small></span><span class="switch${S.onlyVerified?' on':''}"></span></button></div>`; }
+  if(sh.type==='new'){ const types=['Churrasco','Aniversário','Festa em casa'];
+    b=`<h3>Novo rolê privado</h3><form data-form="new" style="display:flex;flex-direction:column;gap:12px">
+      <label class="field">Nome<input id="new-n" value="Niver da Bia" required></label><label class="field">Quando<input id="new-d" value="Sex, 19 dez · 20h" required></label><label class="field">Onde<input id="new-p" value="Apê da Bia · Pinheiros" required></label>
+      <div class="field">Tipo<div class="seg">${types.map((t,i)=>`<button type="button" class="${(sh.t||0)===i?'on':''}" data-a="newType" data-id="${i}">${t}</button>`).join('')}</div></div>
+      <button class="btn acc block" type="submit">Criar a mesa</button></form>`; }
+  if(!b) b=sheetExtra(sh);
+  return `<div class="scrim" data-a="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true"><span class="grab"></span>${b}</div>`;
+}
+
+let viewTimer;
+function viewerHTML(){
+  const v=S.viewer; if(!v) return ''; const p=findPost(v.pid); if(!p) return '';
+  const m=p.media, isVid=m.kind==='video', d=isVid?(m.dur||10):6;
+  const inner=m.url?(isVid?`<video src="${m.url}" autoplay playsinline controls></video>`:`<img src="${m.url}" alt="">`):`<div class="sc sc-${m.scene}${isVid?' anim':''}"></div>`;
+  return `<div class="viewer" role="dialog" aria-label="Mídia de ${esc(p.who)}"><div class="stage-m">${inner}${!(m.url&&isVid)?`<div class="prog"><i style="--d:${d}s"></i></div>`:''}
+    <div class="vtop">${av(p.who,p.h,32)}<div class="grow"><b>${esc(p.who)}</b> · ${p.t}</div><button class="vclose" data-a="closeViewer" aria-label="Fechar" style="color:#fff">${ic('x',20,2.2)}</button></div>
+    <div class="vfoot">${m.once?'<span class="oncetag">Visualização única</span>':''}<span>${esc(m.cap||p.txt||'')}</span>${m.once?'<span class="small" style="opacity:.8">Ao fechar, some pra você. Quem postou vê que você abriu.</span>':''}</div></div></div>`;
+}
+
+function dockHTML(){
+  if(['prod','prodNew','checkin'].includes(S.screen)) return prodDock();
+  const rc=received().length+S.matches.filter(m=>m.unread).length;
+  const right=`<button class="side" data-a="acenos" aria-label="Matches">${ic('heart',22)}${rc?`<span class="badge">${rc}</span>`:''}</button>`;
+  if(S.screen==='home') return `<nav class="dock"><button class="side" data-a="wallet" aria-label="Carteira">${ic('wallet',22)}</button><button class="main" data-a="newRole">${ic('plus',18,2.4)}Criar um rolê</button>${right}</nav>`;
+  if(S.screen==='room'){ const e=evById(S.ev), own=S.owned[e.id];
+    return `<nav class="dock"><button class="side" data-a="home" aria-label="Radar">${ic('radar',22)}</button>${own?`<button class="main" data-a="compose" data-id="${e.id}">${ic('image',18)}Postar na sala</button>`:`<button class="main" data-a="buy">${e.price==null?'Comprar ingresso':'Comprar · '+brl(e.price)}</button>`}${right}</nav>`; }
+  if(S.screen==='mesa'){ const pend=S.churras.guests.filter(g=>!g.paid).length;
+    return `<nav class="dock"><button class="side" data-a="home" aria-label="Radar">${ic('radar',22)}</button><button class="main" data-a="remind" ${pend?'':'disabled'}>${ic('bolt',18,2)}${pend?`Cobrar ${pend} no Pix`:'Todo mundo pagou'}</button>${right}</nav>`; }
+  return `<nav class="dock"><button class="side" data-a="home" aria-label="Radar">${ic('radar',22)}</button><button class="main" data-a="home">Voltar ao radar</button><button class="side" data-a="profile" aria-label="Perfil">${ic('user',22)}</button></nav>`;
+}
+
+function render(resetScroll){
+  const sc=document.getElementById('scroll'), top=sc?sc.scrollTop:0;
+  const keep={}; $app.querySelectorAll('input[id]:not([type=file]),select[id],textarea[id]').forEach(el=>keep[el.id]=el.value);
+  const screens={home,room,mesa,acenos,prod,prodNew,checkin};
+  $app.innerHTML=`<div class="scroll" id="scroll">${screens[S.screen]()}</div>${dockHTML()}${walletHTML()}${sheetHTML()}${S.toast?`<div class="toast" role="status">${ic('check',18,2.4)}${esc(S.toast)}</div>`:''}${viewerHTML()}`;
+  for(const [id,v] of Object.entries(keep)){ const el=document.getElementById(id); if(el) el.value=v; }
+  const ns=document.getElementById('scroll'); if(ns&&!resetScroll) ns.scrollTop=top;
+  const m=$app.querySelector('.msgs'); if(m) m.scrollIntoView({block:'end'});
+  const vv=$app.querySelector('.viewer video'); if(vv) vv.addEventListener('ended',()=>A.closeViewer());
+  syncMap(); bindDeck();
+}
+
+function wave(id,saw,quiet){
+  if(S.waved[id]) return; const [ev,i]=id.split('|'), p=PEOPLE[ev][+i];
+  if(S.visibility!=='visivel' && !saw){ toast('Ative "Visível" no perfil para usar o match'); return; }
+  if(quiet && !p.liked){ S.waved[id]=true; render(); return; }
+  S.waved[id]=true;
+  if(p.liked){ S.matches.unshift({n:p.n,a:p.a,h:p.h,ev,msgs:[],unread:0}); S.sheet={type:'match',p,ev,saw}; render(); }
+  else { S.sheet=null; toast(saw?`Marcado. Se ${p.n} marcar você também, vocês dão match.`:`Curtida enviada. Se ${p.n} curtir você também, dá match.`); }
+}
+
+const TEMPLATES={0:[{n:'Carnes',v:300,c:'comida'},{n:'Carvão e gelo',v:70,c:'comida'},{n:'Cerveja',v:200,c:'bebida'}],1:[{n:'Bolo e docinhos',v:160,c:'comida'},{n:'Salgados (200 un.)',v:180,c:'comida'},{n:'Espumante e cerveja',v:150,c:'bebida'}],2:[{n:'Petiscos',v:120,c:'comida'},{n:'Gelo',v:30,c:'comida'},{n:'Bebidas',v:300,c:'bebida'}]};
+const NEWBIES=[['Rafa',200],['Bia',340],['Caio',30],['Nanda',300],['Léo',150],['Carol',10],['Diego',220],['Paty',260]];
+const REPLIES=['Haha, boa! Tô perto do bar.','Fechou! Me manda onde você tá.','Tô de camisa verde, fácil de achar.','Bora! Tô com umas amigas também.'];
+
+const A={
+  home:()=>{ S.stack=[]; S.screen='home'; S.sheet=null; S.wallet=false; render(true); },
+  back:()=>back(),
+  mode:id=>{S.mode=id;render();},
+  sel:id=>{S.sel=id;render();},
+  room:id=>{ S.wallet=false; go('room',{ev:id}); },
+  mesa:()=>{ S.wallet=false; go('mesa'); },
+  acenos:()=>{ if(S.screen!=='acenos') go('acenos'); },
+  profile:()=>{S.sheet={type:'profile'};render();},
+  wallet:()=>{S.wallet=true;S.walletEnter=true;render();},
+  closeWallet:()=>{S.wallet=false;render();},
+  flip:id=>{ S.flip[id]=!S.flip[id]; const el=$app.querySelector(`.wc[data-card="${id}"]`); if(el) el.classList.toggle('flip',S.flip[id]); else render(); },
+  hour:id=>{S.hour=+id;render(true);},
+  buy:()=>{S.sheet={type:'buy',step:'resumo',pay:'pix'};render();},
+  payopt:id=>{S.sheet.pay=id;render();},
+  buyNext:()=>{ if(S.sheet.pay==='pix'){S.sheet.step='pix';render();} else A.pixOk(); },
+  pixOk:()=>{ S.owned[S.ev]=true; S.sheet={type:'buy',step:'ok'}; render(); },
+  enter:()=>{ S.sheet=null; S.hour=1; render(true); },
+  closeSheet:()=>{S.sheet=null;render();},
+  person:id=>{S.sheet={type:'person',id};render();},
+  wave:id=>wave(id,false),
+  saw:id=>wave(id,true),
+  like:id=>{S.myLikes[id]=!S.myLikes[id];render();},
+  view:id=>{ const p=findPost(id); if(!p||!p.media) return; const m=p.media;
+    if(m.once){ if(S.opened[id]) return; S.opened[id]=true; } S.seenStory[id]=true;
+    S.viewer={pid:id}; render(); clearTimeout(viewTimer); const isVid=m.kind==='video';
+    if(!(m.url&&isVid)) viewTimer=setTimeout(()=>{ if(S.viewer&&S.viewer.pid===id) A.closeViewer(); },(isVid?(m.dur||10):6)*1000); },
+  closeViewer:()=>{ clearTimeout(viewTimer); S.viewer=null; render(); },
+  compose:id=>{ S.sheet={type:'compose',scope:id}; S.draft=null; render(); },
+  onceToggle:()=>{ if(S.draft){S.draft.once=!S.draft.once;render();} },
+  dropDraft:()=>{ S.draft=null; render(); },
+  publish:()=>{ const t=document.getElementById('ctext'), v=t.value.trim(), d=S.draft, sc=S.sheet.scope; if(!v&&!d){ t.focus(); return; }
+    const list=sc==='mesa'?S.churras.posts:S.posts[sc]; list.unshift({who:'Você',h:280,t:'agora',txt:v,likes:0,media:d?{kind:d.kind,url:d.url,once:d.once,mh:220}:undefined});
+    t.value=''; S.draft=null; S.sheet=null; if(sc!=='mesa'&&phaseOf(S.hour)!=='esquenta') S.hour=1;
+    toast(d&&d.once?'Publicado. Cada pessoa pode abrir uma vez.':'Publicado no mural'); },
+  chat:id=>{ const i=+id; if(S.matches[i]) S.matches[i].unread=0; S.sheet={type:'chat',i}; render(); },
+  vis:id=>{S.visibility=id;render();},
+  sw:id=>{S[id]=!S[id];render();},
+  delItem:id=>{S.churras.items.splice(+id,1);render();},
+  drinks:id=>{const g=S.churras.guests[+id]; g.drinks=!g.drinks; render();},
+  pay:id=>{const g=S.churras.guests[+id]; g.paid=true; toast(`Pix de ${g.n} recebido: ${brl(calc().share(g))}`);},
+  remind:()=>{const n=S.churras.guests.filter(g=>!g.paid).length; if(n) toast(`Lembrete com Pix enviado para ${n} ${n===1?'pessoa':'pessoas'}`);},
+  copy:()=>{ const t='https://'+document.getElementById('invlink').textContent;
+    try{ navigator.clipboard.writeText(t).then(()=>toast('Convite copiado'),()=>{selectText('invlink');toast('Link selecionado: copie com Ctrl+C');}); }catch(e){ selectText('invlink'); } },
+  addGuest:()=>{ const c=S.churras, used=new Set(c.guests.map(g=>g.n)); const nb=NEWBIES.find(([n])=>!used.has(n))||['Convidado '+c.guests.length,(c.guests.length*47)%360];
+    c.guests.push({n:nb[0],h:nb[1],drinks:Math.random()>.3,paid:false}); toast(`${nb[0]} aceitou o convite`); },
+  newRole:()=>{S.sheet={type:'new',t:0};render();},
+  newType:id=>{S.sheet.t=+id;render();},
+  guide:id=>{
+    S.sheet=null; S.wallet=false; S.viewer=null; S.stack=[];
+    if(id==='radar'){ S.screen='home'; S.mode='radar'; render(true); return; }
+    if(id==='wallet'){ S.screen='home'; S.wallet=true; S.walletEnter=true; render(true); return; }
+    if(id==='mesa'){ S.screen='mesa'; render(true); return; }
+    if(id==='buy'){ delete S.owned.neon; S.screen='room'; S.ev='neon'; S.hour=1; render(true); return; }
+    const had=S.owned.neon; S.owned.neon=true; S.screen='room'; S.ev='neon'; S.hour=id==='esquenta'?1:id==='pista'?5:11; render(true);
+    if(!had) toast('Ingresso do Baile Neon simulado');
+  },
+  reset:()=>{ S=freshState(); render(true); },
+  noop:()=>{}
+};
+function selectText(id){ const el=document.getElementById(id), r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+document.addEventListener('click',ev=>{ const t=ev.target.closest('[data-a]'); if(!t) return; const f=A[t.dataset.a]; if(f){ ev.preventDefault(); f(t.dataset.id); } });
+document.addEventListener('submit',ev=>{
+  const f=ev.target; if(!f.dataset.form) return; ev.preventDefault(); const k=f.dataset.form;
+  if(k==='item'){ const n=document.getElementById('item-n').value.trim(), v=parseFloat(document.getElementById('item-v').value), c=document.getElementById('item-c').value;
+    if(!n||!(v>0)) return; S.churras.items.push({n,v,c}); document.getElementById('item-n').value=''; document.getElementById('item-v').value=''; render(); }
+  if(k==='msg'){ const inp=document.getElementById('msg'), v=inp.value.trim(); if(!v) return; const i=S.sheet.i, m=S.matches[i]; m.msgs.push({me:true,t:v}); inp.value=''; render();
+    setTimeout(()=>{ m.msgs.push({me:false,t:REPLIES[m.msgs.length%REPLIES.length]}); if(!(S.sheet&&S.sheet.type==='chat'&&S.sheet.i===i)) m.unread=1; render(); },1100); }
+  if(k==='prodNew'){ submitProdNew(); return; }
+  if(k==='new'){ const t=S.sheet.t||0, types=['Churrasco','Aniversário','Festa em casa'];
+    S.churras={...S.churras,name:document.getElementById('new-n').value.trim()||'Novo rolê',date:document.getElementById('new-d').value.trim(),place:document.getElementById('new-p').value.trim(),type:types[t],code:'ROLE-'+Math.floor(1000+Math.random()*9000),
+      items:TEMPLATES[t].map(x=>({...x})),guests:[{n:'Você',h:280,drinks:true,paid:true,host:true}],posts:[]};
+    S.sheet=null; S.stack=[]; S.screen='mesa'; render(true); toast('Mesa criada. Mande o convite pra galera'); }
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target; if(t.id!=='file-compose') return; const f=t.files&&t.files[0]; if(!f) return;
+  if(!/^(image|video)\//.test(f.type)){ toast('Escolha uma foto ou um vídeo'); return; }
+  S.draft={url:URL.createObjectURL(f),kind:f.type.startsWith('video')?'video':'photo',once:false}; render();
+});
+let lastBucket=qrBucket();
+setInterval(()=>{ if(!S.wallet) return; if(qrBucket()!==lastBucket){ lastBucket=qrBucket(); render(); return; } document.querySelectorAll('[data-count]').forEach(el=>el.textContent=qrLeft()+' s'); },1000);
+
+/* =================== Versão D: mapa da cidade + área do produtor =================== */
+const CITIES=[
+  {id:'sp',name:'São Paulo',uf:'SP',lat:-23.556,lng:-46.680,z:12,me:[-23.5613,-46.6563]},
+  {id:'rj',name:'Rio de Janeiro',uf:'RJ',lat:-22.940,lng:-43.195,z:12,me:[-22.9700,-43.1860]},
+  {id:'bh',name:'Belo Horizonte',uf:'MG',lat:-19.920,lng:-43.938,z:13},
+  {id:'cwb',name:'Curitiba',uf:'PR',lat:-25.429,lng:-49.271,z:13},
+  {id:'mga',name:'Maringá',uf:'PR',lat:-23.410,lng:-51.932,z:13,me:[-23.4250,-51.9380]},
+  {id:'poa',name:'Porto Alegre',uf:'RS',lat:-30.035,lng:-51.218,z:13},
+  {id:'ssa',name:'Salvador',uf:'BA',lat:-12.974,lng:-38.501,z:13},
+  {id:'rec',name:'Recife',uf:'PE',lat:-8.054,lng:-34.881,z:13},
+  {id:'fln',name:'Florianópolis',uf:'SC',lat:-27.595,lng:-48.548,z:12},
+  {id:'bsb',name:'Brasília',uf:'DF',lat:-15.794,lng:-47.882,z:12}
+];
+EVENTS.push(
+  {id:'techno',name:'Techno no Viaduto',date:'Hoje, sex 5 dez',time:'23h às 7h',place:'Barra Funda',price:40,lote:'1º lote',going:268,lat:-23.5262,lng:-46.6668,city:'sp',when:'hoje',c:'#4ADE9B',producer:'Coletivo Subsolo',friends:[['Caio',30]]},
+  {id:'samba',name:'Roda de Samba da Praça',date:'Hoje, sex 5 dez',time:'19h à 1h',place:'Centro',price:20,lote:'Entrada única',going:154,lat:-23.5440,lng:-46.6395,city:'sp',when:'hoje',c:'#FF7A59',producer:'Bloco da Praça',friends:[]},
+  {id:'lapa',name:'Baile na Lapa',date:'Hoje, sex 5 dez',time:'22h às 5h',place:'Lapa',price:30,lote:'1º lote',going:520,lat:-22.9130,lng:-43.1795,city:'rj',when:'hoje',c:'#FF5DA2',producer:'Lapa Viva',friends:[]},
+  {id:'arpoador',name:'Pôr do Sol no Arpoador',date:'Sáb, 6 dez',time:'16h às 22h',place:'Arpoador',price:50,lote:'1º lote',going:310,lat:-22.9890,lng:-43.1910,city:'rj',when:'fds',c:'#FFB23F',producer:'Maré Alta',friends:[]},
+  {id:'douha',real:true,cat:'Balada',name:'Nativa at Douha',date:'Amanhã, sáb 28 nov',time:'à noite',s:23,e:30,place:'Douha · Rod. Dep. Sílvio Barros, 6175',price:null,lote:'Preço a confirmar',going:470,lat:-23.3645854,lng:-51.9010865,city:'mga',when:'fds',c:'#B98CFF',producer:'Douha',lineup:'DJs HAKHAM, Kevo e Lai',src:'eventos.maringa.com',friends:[]},
+  {id:'filin',real:true,cat:'Balada',name:"Filin'",date:'Hoje, sex 27 nov',time:'23h às 5h',place:'Zona 02 · Av. Cerro Azul, 469',price:null,lote:'Preço a confirmar',going:520,lat:-23.4315146,lng:-51.9356665,city:'mga',when:'hoje',c:'#FF5DA2',producer:"Filin'",lineup:'Noite da casa (sexta e sábado)',friends:[]},
+  {id:'folks',real:true,cat:'Balada',name:'Folks Pub Sertanejo',date:'Hoje, sex 27 nov',time:'22h às 4h',place:'Av. Carlos Correa Borges, 639',price:null,lote:'Preço a confirmar',going:390,lat:-23.4379702,lng:-51.9563336,city:'mga',when:'hoje',c:'#FFB23F',producer:'Folks Maringá',lineup:'Noite sertaneja (quinta a sábado)',friends:[]},
+  {id:'ninpha',real:true,cat:'Bar',name:'Donna Ninpha Skate Bar',date:'Hoje, sex 27 nov',time:'à noite',s:19,e:26,place:'Av. Carlos Correa Borges, 1181',price:null,lote:'Entrada a confirmar',going:120,lat:-23.4427338,lng:-51.9553175,city:'mga',when:'hoje',c:'#4ADE9B',producer:'Donna Ninpha',lineup:'Horário no Instagram @donnaninpha',friends:[]},
+  {id:'agrobar',real:true,cat:'Bar',name:'Agrobar Maringá',date:'Hoje, sex 27 nov',time:'à noite',s:19,e:27,place:'Zona 02 · Av. Pres. Juscelino K. de Oliveira, 1324',price:null,lote:'Entrada a confirmar',going:260,lat:-23.4369258,lng:-51.9358674,city:'mga',when:'hoje',c:'#FF7A59',producer:'Agrobar',lineup:'Horário no Instagram @agrobarmaringa',friends:[]},
+  {id:'bird',real:true,cat:'Bar',name:'Bar do Bird',date:'Hoje, sex 27 nov',time:'17h à 1h',place:'Av. Sen. Petrônio Portela, 577',price:null,lote:'Entrada a confirmar',going:90,lat:-23.4458138,lng:-51.9153209,city:'mga',when:'hoje',c:'#5BC0FF',producer:'Bar do Bird',lineup:'Aberto de segunda a sexta',friends:[]},
+  {id:'container',real:true,cat:'Bar',name:'Bar Container Maringá',date:'Hoje, sex 27 nov',time:'17h à 0h',place:'Zona 07 · R. Paranaguá, 137',price:null,lote:'Entrada a confirmar',going:150,lat:-23.4110735,lng:-51.94378,city:'mga',when:'hoje',c:'#FFD166',producer:'Bar Container',lineup:'Aberto de terça a sexta, das 17h à 0h',friends:[]},
+  {id:'pedra',name:'Roda na Pedra',date:'Dom, 7 dez',time:'18h à 0h',place:'Saúde · Centro',price:25,lote:'Entrada única',going:205,lat:-22.8975,lng:-43.1870,city:'rj',when:'fds',c:'#5BC0FF',producer:'Coletivo Pedra',friends:[]}
+);
+PEOPLE.techno=PEOPLE.neon.slice(1,5); PEOPLE.samba=PEOPLE.sunset.slice(); PEOPLE.lapa=PEOPLE.poli.slice(); PEOPLE.arpoador=PEOPLE.sunset.slice(); PEOPLE.pedra=PEOPLE.neon.slice(0,3);['douha','filin','folks'].forEach((id,k)=>{ PEOPLE[id]=PEOPLE.neon.slice(k,k+4); }); ['ninpha','agrobar','bird','container'].forEach(id=>{ PEOPLE[id]=PEOPLE.sunset.slice(); });
+const priceTxt=e=>e.price==null?'Preço a confirmar':brl(e.price);
+const HOODS={
+  sp:[['Pinheiros',-23.567,-46.692],['Vila Madalena',-23.552,-46.690],['Centro',-23.545,-46.634],['Vila Leopoldina',-23.530,-46.735],['Butantã',-23.574,-46.716],['Vila Mariana',-23.589,-46.634],['Barra Funda',-23.523,-46.667],['Moema',-23.601,-46.664],['Itaim Bibi',-23.584,-46.678],['Mooca',-23.556,-46.598],['Perdizes',-23.537,-46.680],['Consolação',-23.551,-46.658],['Bela Vista',-23.561,-46.645],['Lapa',-23.519,-46.704]],
+  mga:[['Zona 7',-23.4080,-51.9365],['Zona 1',-23.4268,-51.9395],['Novo Centro',-23.4190,-51.9320],['Zona 5',-23.4150,-51.9470],['Zona 2',-23.4310,-51.9440],['Zona 3',-23.4330,-51.9310],['Zona 4',-23.4205,-51.9500],['Jardim Alvorada',-23.3960,-51.9580],['Vila Operária',-23.4140,-51.9250]],
+  rj:[['Lapa',-22.913,-43.180],['Botafogo',-22.951,-43.184],['Copacabana',-22.971,-43.183],['Ipanema',-22.983,-43.205],['Leblon',-22.983,-43.223],['Centro',-22.904,-43.177],['Santa Teresa',-22.921,-43.190],['Flamengo',-22.933,-43.176],['Jardim Botânico',-22.966,-43.224],['Tijuca',-22.925,-43.235]]
+};
+const cityById=id=>CITIES.find(c=>c.id===id)||CITIES[0];
+function distLL(a,b){ const R=6371,t=x=>x*Math.PI/180, dLa=t(b[0]-a[0]), dLo=t(b[1]-a[1]); const h=Math.sin(dLa/2)**2+Math.cos(t(a[0]))*Math.cos(t(b[0]))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+const dist=e=>distLL(S.userPos,[e.lat,e.lng]);
+const km=e=>{ const d=dist(e); return (d<10?d.toFixed(1):String(Math.round(d))).replace('.',','); };
+const cityEvents=()=>EVENTS.filter(e=>e.city===S.city&&(S.filter==='tudo'||(S.filter==='agora'?evState(e)==='on':e.when===S.filter)));
+const showMesa=()=>S.city==='sp'&&(S.filter==='tudo'||S.filter==='privados');
+const soldOf=id=>{ const st=S.prod.stats[id]; return st?st.lotes.reduce((a,l)=>a+l.sold,0):0; };
+function nearestHood(ll){ const hs=HOODS[S.city]; if(!hs) return cityById(S.city).name; let best=hs[0],bd=1e9; hs.forEach(h=>{ const d=distLL([ll.lat,ll.lng],[h[1],h[2]]); if(d<bd){bd=d;best=h;} }); return best[0]; }
+
+/* ---- mapa (Leaflet). Sem acesso aos blocos do mapa, desenha a cidade em coordenadas reais ---- */
+let map=null, mkLayer=null, tileLayer=null, tileOk=false, tileErr=0, drawnOn=false, carScroll=0, mapFailed=false, mkKey='', mapShown=false, geoTimer=null, geoReq=0;
+const FORCE_DRAWN=location.hash==='#desenhado';
+const isDark=()=>{ const t=document.documentElement.dataset.theme; return t?t==='dark':!matchMedia('(prefers-color-scheme: light)').matches; };
+const tileUrl=()=>'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+function initMap(){
+  if(map||!window.L||mapFailed) return;
+  try{ initMapInner(); }catch(err){ mapFailed=true; map=null; S.mode='lista'; setTimeout(()=>{ render(true); toast('O mapa não carregou aqui. Mostrando em lista.'); },0); }
+}
+function initMapInner(){
+  let host=document.getElementById('map');
+  if(host._leaflet_id){ const fresh=host.cloneNode(false); fresh.removeAttribute('class'); fresh.className='map'; host.replaceWith(fresh); host=fresh; }
+  const c=cityById(S.city);
+  map=L.map(host,{zoomControl:false,attributionControl:true}).setView([c.lat,c.lng],c.z);
+  map.attributionControl.setPrefix(false);
+  if(FORCE_DRAWN) useDrawn();
+  else {
+    tileLayer=L.tileLayer(tileUrl(),{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+    tileLayer.on('tileload',()=>{ tileOk=true; });
+    tileLayer.on('tileerror',()=>{ tileErr++; if(!tileOk&&tileErr>=6) useDrawn(); });
+    setTimeout(()=>{ if(!tileOk) useDrawn(); },3500);
+    try{ matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>syncMap()); }catch(e){}
+  }
+  mkLayer=L.layerGroup().addTo(map);
+  const zl=()=>{ const el=document.getElementById('map'); el.classList.toggle('z-low',map.getZoom()<13); el.classList.toggle('z-near',map.getZoom()>=14); };
+  map.on('zoomend',zl); zl();
+  map.on('moveend',()=>{ if(S.screen==='prodNew'){ const el=document.getElementById('pinlabel'); if(el) el.textContent=nearestHood(map.getCenter())+' · '+cityById(S.city).name; } });
+}
+function useDrawn(){
+  if(drawnOn||!map) return; drawnOn=true;
+  if(tileLayer){ map.removeLayer(tileLayer); tileLayer=null; }
+  document.getElementById('map').classList.add('drawn');
+  const g=L.layerGroup().addTo(map);
+  const line=(pts,cls,w)=>L.polyline(pts,{className:cls,weight:w,interactive:false}).addTo(g);
+  const poly=(pts,cls)=>L.polygon(pts,{className:cls,weight:1,interactive:false}).addTo(g);
+  const label=(ll,t,cls)=>L.marker(ll,{interactive:false,keyboard:false,icon:L.divIcon({className:'lf-lbl '+cls,html:`<span>${t}</span>`,iconSize:[0,0]})}).addTo(g);
+  // São Paulo
+  line([[-23.700,-46.700],[-23.660,-46.708],[-23.625,-46.699],[-23.600,-46.695],[-23.580,-46.705],[-23.565,-46.716],[-23.545,-46.740],[-23.527,-46.748]],'lf-river',7);
+  line([[-23.527,-46.748],[-23.515,-46.720],[-23.513,-46.690],[-23.517,-46.660],[-23.515,-46.630],[-23.520,-46.600],[-23.510,-46.570],[-23.495,-46.540]],'lf-river',8);
+  line([[-23.5557,-46.6620],[-23.5613,-46.6563],[-23.5713,-46.6452]],'lf-road',5);
+  line([[-23.548,-46.638],[-23.570,-46.645],[-23.590,-46.650],[-23.612,-46.656]],'lf-road',4);
+  line([[-23.556,-46.665],[-23.566,-46.678],[-23.574,-46.690]],'lf-road',4);
+  line([[-23.567,-46.693],[-23.580,-46.684],[-23.594,-46.682]],'lf-road',4);
+  line([[-23.548,-46.630],[-23.545,-46.600],[-23.540,-46.570]],'lf-road',4);
+  line([[-23.537,-46.660],[-23.530,-46.690],[-23.528,-46.720]],'lf-road',4);
+  poly([[-23.580,-46.662],[-23.582,-46.650],[-23.594,-46.652],[-23.596,-46.663],[-23.588,-46.669]],'lf-park');
+  label([-23.588,-46.658],'Ibirapuera','lf-street'); label([-23.5605,-46.659],'Av. Paulista','lf-street');
+  label([-23.510,-46.640],'Rio Tietê','lf-street'); label([-23.592,-46.703],'Rio Pinheiros','lf-street');
+  // Maringá
+  line([[-23.4290,-51.9650],[-23.4268,-51.9420],[-23.4245,-51.9180]],'lf-road',5);
+  line([[-23.4105,-51.9700],[-23.4135,-51.9420],[-23.4160,-51.9100]],'lf-road',5);
+  line([[-23.4000,-51.9395],[-23.4160,-51.9390],[-23.4330,-51.9385]],'lf-road',4);
+  poly([[-23.4195,-51.9318],[-23.4198,-51.9262],[-23.4250,-51.9258],[-23.4256,-51.9312]],'lf-park');
+  poly([[-23.4050,-51.9425],[-23.4040,-51.9345],[-23.4095,-51.9335],[-23.4102,-51.9418]],'lf-park');
+  label([-23.4226,-51.9286],'Parque do Ingá','lf-street'); label([-23.4062,-51.9380],'UEM','lf-street');
+  label([-23.4276,-51.9520],'Av. Brasil','lf-street'); label([-23.4125,-51.9560],'Av. Colombo','lf-street');
+  // Rio de Janeiro
+  poly([[-22.962,-43.212],[-22.966,-43.201],[-22.976,-43.198],[-22.985,-43.205],[-22.981,-43.219],[-22.971,-43.221]],'lf-water');
+  poly([[-22.962,-43.168],[-22.972,-43.179],[-22.986,-43.190],[-22.988,-43.205],[-22.987,-43.230],[-23.060,-43.240],[-23.060,-43.100],[-22.950,-43.110]],'lf-water');
+  poly([[-22.895,-43.170],[-22.925,-43.170],[-22.940,-43.172],[-22.952,-43.168],[-22.950,-43.150],[-22.880,-43.100],[-22.850,-43.160]],'lf-water');
+  line([[-22.962,-43.168],[-22.972,-43.179],[-22.986,-43.190]],'lf-coast',5); line([[-22.987,-43.193],[-22.988,-43.205],[-22.987,-43.228]],'lf-coast',5);
+  label([-22.974,-43.209],'Lagoa','lf-street'); label([-22.995,-43.170],'Oceano Atlântico','lf-street'); label([-22.905,-43.145],'Baía de Guanabara','lf-street');
+  Object.values(HOODS).flat().forEach(h=>label([h[1],h[2]],h[0],'lf-hood'));
+  CITIES.filter(c=>!HOODS[c.id]).forEach(c=>label([c.lat,c.lng],c.name,'lf-city'));
+  map.attributionControl.addAttribution('Mapa desenhado do protótipo');
+}
+function updateMarkers(){
+  if(!map) return;
+  const key=[S.screen==='prodNew',S.city,S.filter,S.sel,S.userPos.join(','),EVENTS.length,S.churras.name,nowHour()].join('|');
+  if(key===mkKey) return; mkKey=key; mkLayer.clearLayers();
+  if(S.screen==='prodNew') return;
+  cityEvents().forEach(e=>{
+    const s=Math.min(46,Math.round(16+Math.sqrt(e.going||1)*1.05)), sel=S.sel===e.id;
+    const fr=e.friends.length?`<em>${e.friends.slice(0,2).map(([n,h])=>av(n,h,18)).join('')}</em>`:'';
+    const st=evState(e), g=Math.min(190,Math.round(70+Math.sqrt(e.going||1)*4.2)), hs=evHours(e)[0];
+    const icon=L.divIcon({className:'mkw',iconSize:[g,g],iconAnchor:[g/2,g/2],html:`<div class="nm ${st}${sel?' sel':''}" style="--c:${e.c};--g:${g}px"><span class="glow"></span><span class="dot"></span><span class="flyer"><i></i>${esc(e.name)}<small>${esc(stateLabel(e))}</small></span></div>`});
+    L.marker([e.lat,e.lng],{icon,title:e.name,keyboard:true,zIndexOffset:sel?1000:0}).on('click',()=>{ S.scrollCar=true; A.sel(e.id); }).addTo(mkLayer);
+  });
+  if(showMesa()){ const c=S.churras, sel=S.sel==='mesa';
+    L.marker([c.lat,c.lng],{title:c.name,zIndexOffset:sel?1000:0,icon:L.divIcon({className:'mkw',iconSize:[80,80],iconAnchor:[40,40],html:`<div class="nm priv on${sel?' sel':''}" style="--c:${MESA_C};--g:80px"><span class="glow"></span><span class="dot"></span><span class="flyer"><i></i>${esc(c.name)}<small>rolê privado</small></span></div>`})}).on('click',()=>{ S.scrollCar=true; A.sel('mesa'); }).addTo(mkLayer); }
+  L.marker(S.userPos,{interactive:false,keyboard:false,icon:L.divIcon({className:'mkw',iconSize:[18,18],iconAnchor:[9,9],html:'<div class="meDot"></div>'})}).addTo(mkLayer);
+}
+function syncMap(){
+  const ok=!!window.L&&!mapFailed, ph=document.querySelector('.phone'), onMap=S.screen==='home'&&S.mode==='mapa'&&ok, top=S.screen==='prodNew'&&ok;
+  ph.classList.toggle('show-map',onMap); ph.classList.toggle('map-top',top); $app.classList.toggle('over-map',onMap||top);
+  document.getElementById('map').classList.toggle('tiles-dark',isDark());
+  document.getElementById('map').classList.add('night');
+  const want=(onMap?'full':top?'top':'');
+  if(want){ initMap(); if(map){ try{ if(want!==mapShown){ const first=mapShown===false; mapShown=want; map.invalidateSize(); if(first&&want==='full') fitCity(); } updateMarkers(); }catch(err){} } }
+  else mapShown='';
+  const car=document.getElementById('carousel');
+  if(car){ car.scrollLeft=carScroll; car.onscroll=()=>{ carScroll=car.scrollLeft; };
+    const el=car.querySelector('.ecard.sel'); if(el&&S.scrollCar){ S.scrollCar=false; car.scrollTo({left:el.offsetLeft-(car.clientWidth-el.clientWidth)/2,behavior:'smooth'}); } }
+}
+function flyTo(id){ if(!map) return; const e=id==='mesa'?S.churras:evById(id); if(e) map.flyTo([e.lat,e.lng],Math.max(map.getZoom(),13),{duration:.6}); }
+function setCity(id,pos){
+  const c=cityById(id); S.city=id; S.userPos=pos||c.me||[c.lat,c.lng]; S.gps=!!pos; S.filter='tudo';
+  const evs=cityEvents().sort((a,b)=>dist(a)-dist(b)); S.sel=evs[0]?evs[0].id:(showMesa()?'mesa':null); S.sheet=null; carScroll=0;
+  if(S.screen!=='home'){ S.stack=[]; S.screen='home'; }
+  render(true); if(map){ map.setView(pos||[c.lat,c.lng],c.z); if(!pos) fitCity(); }
+}
+function fitCity(){
+  if(!map) return; const pts=EVENTS.filter(e=>e.city===S.city).map(e=>[e.lat,e.lng]);
+  if(pts.length<2) return;
+  try{ map.fitBounds(L.latLngBounds(pts),{paddingTopLeft:[30,140],paddingBottomRight:[70,250],maxZoom:15}); }catch(err){}
+}
+
+/* ---- telas da home e do produtor ---- */
+function walletPeekHTML(){ const cards=walletCards();
+  return `<button class="peek" data-a="wallet" aria-label="Abrir carteira"><span class="eyebrow">Carteira · ${cards.length} ${cards.length===1?'item':'itens'}</span>${cards.map(c=>`<span class="pk" style="--c:${c.c}">${esc(c.name)}<small>${c.sub}</small></span>`).join('')}</button>`; }
+function emptyCity(c){
+  const f=S.filter!=='tudo'&&EVENTS.some(e=>e.city===S.city);
+  return `<div class="ecard empty"><b class="ename">${f?'Nada com esse filtro':'Nenhum rolê em '+c.name+' ainda'}</b><p class="small muted">${f?'Volte para "Tudo" para ver todos os rolês da cidade.':'O Rolê está chegando aqui. Você produz eventos em '+c.name+'? Cadastre o primeiro e ele aparece no mapa.'}</p>${f?'<button class="btn sm" data-a="filter" data-id="tudo">Ver tudo</button>':'<button class="btn acc sm" data-a="prod">Sou produtor</button>'}</div>`;
+}
+function home(){
+  const c=cityById(S.city), evs=cityEvents().sort((a,b)=>dist(a)-dist(b)), mesaOn=showMesa(), n=evs.length+(mesaOn?1:0);
+  const bar=`<div class="cbar"><button class="citybtn" data-a="cities"><span class="pinI">${ic('pin',18,2)}</span><span><b>${c.name}</b><small>${SIM_DIA}, ${SIM_HORA}h · ${(()=>{ const o=EVENTS.filter(e=>e.city===S.city&&evState(e)==='on').length; return o?o+(o===1?' aberto agora':' abertos agora'):'nada aberto agora'; })()}</small></span>${ic('chev',16,2)}</button>
+    <button class="mbtn" data-a="mode" data-id="${S.mode==='mapa'?'lista':'mapa'}" aria-label="${S.mode==='mapa'?'Ver em lista':'Ver no mapa'}">${ic(S.mode==='mapa'?'list':'map',18)}</button>
+    <button class="avbtn" data-a="profile" aria-label="Perfil">${av('Você',280,42)}</button></div>`;
+  const fl=`<div class="filters" role="group" aria-label="Filtrar rolês">${[['tudo','Tudo'],['agora','Aberto agora'],['hoje','Hoje'],['fds','Fim de semana'],['privados','Privados']].map(([k,l])=>`<button class="${S.filter===k?'on':''}" data-a="filter" data-id="${k}">${l}</button>`).join('')}</div>`;
+  if(S.mode==='lista'||!window.L) return `<div class="pad">${bar}${fl}${n?listHTML():emptyCity(c)}${walletPeekHTML()}</div>`;
+  const cards=evs.map(e=>`<button class="ecard${S.sel===e.id?' sel':''}" style="--c:${e.c}" data-a="sel" data-id="${e.id}"><span class="openst ${evState(e)}">${esc(stateLabel(e))}</span><span class="ebar"></span><p class="eyebrow">${e.real?`<span class="realtag">${e.cat} · local real</span> `:''}${e.date} · ${e.time.startsWith('à')?e.time:e.time.split(' ')[0]} · ${km(e)} km</p><b class="ename">${e.name}</b><span class="small muted">${e.place} · ${e.going} vão${e.friends.length?' · '+e.friends[0][0]+(e.friends.length>1?' +'+(e.friends.length-1):''):''}</span>
+      ${e.lineup?`<span class="small">${esc(e.lineup)}</span>`:''}
+      <span class="erow2"><span class="price${e.price==null&&!S.owned[e.id]?' pq':''}">${S.owned[e.id]?'Você vai':priceTxt(e)}</span><span class="go" data-a="room" data-id="${e.id}">${S.owned[e.id]?'Entrar':'Ver sala'}${ic('arrow',14,2.2)}</span></span></button>`).join('')
+    +(mesaOn?`<button class="ecard${S.sel==='mesa'?' sel':''}" style="--c:${MESA_C}" data-a="sel" data-id="mesa"><span class="ebar"></span><p class="eyebrow">Privado · ${esc(S.churras.date)} · ${km(S.churras)} km</p><b class="ename">${esc(S.churras.name)}</b><span class="small muted">${esc(S.churras.place)}</span>
+      <span class="erow2"><span class="price">${brl(calc().share(S.churras.guests[0]))}</span><span class="go" data-a="mesa">Abrir a mesa${ic('arrow',14,2.2)}</span></span></button>`:'');
+  return `<div class="mapui"><div class="mtop">${bar}${fl}</div>
+    <div class="mside"><button class="mbtn" data-a="zoom" data-id="1" aria-label="Aproximar">${ic('plus',18,2.2)}</button><button class="mbtn" data-a="zoom" data-id="-1" aria-label="Afastar">${ic('minus',18,2.2)}</button><button class="mbtn${S.gps?' on':''}" data-a="locate" aria-label="Usar minha localização">${ic('locate',18,2)}</button></div>
+    <div class="mbottom">${n?`<div class="carousel" id="carousel">${cards}</div>`:(S.filter==='agora'?`<div class="ecard empty"><b class="ename">Nada aberto agora em ${c.name}</b><p class="small muted">São ${hr(nowHour())}. Veja o que abre mais tarde.</p><button class="btn sm" data-a="filter" data-id="tudo">Ver tudo</button></div>`:emptyCity(c))}</div></div>`;
+}
+const RULES=[['match','Match da festa','Quem tem ingresso pode curtir e dar match'],['mural','Mural da festa','Compradores postam fotos e vídeos'],['once','Visualização única','Libera fotos e vídeos que abrem uma vez'],['lista','Lista de quem vai','Mostra quem comprou, menos quem ficou invisível']];
+function salesChart(d){
+  const max=Math.max(...d); if(!max) return `<p class="small muted">Nenhuma venda ainda. Compartilhe o link do evento para começar.</p>`;
+  const W=320,H=132,pl=28,pb=18,pt=18,bw=(W-pl)/d.length,top=Math.ceil(max/25)*25, y=v=>pt+(H-pt-pb)*(1-v/top);
+  const start=new Date(2026,10,22), lab=i=>{ const t=new Date(start); t.setDate(start.getDate()+i); return t.getDate()+'/'+(t.getMonth()+1); };
+  const grid=[0,top/2,top].map(v=>`<line class="grid" x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${pl-5}" y="${y(v)+3}" text-anchor="end">${v}</text>`).join('');
+  const bars=d.map((v,i)=>`<rect class="sbar${i===d.length-1?' now':''}" x="${(pl+i*bw+2).toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw-4).toFixed(1)}" height="${Math.max(H-pb-y(v),1).toFixed(1)}" rx="3" data-tip="${lab(i)} · ${v} ingressos"/>`).join('');
+  const xl=[0,7,13].map(i=>`<text class="axis" x="${(pl+i*bw+bw/2).toFixed(1)}" y="${H-4}" text-anchor="middle">${lab(i)}</text>`).join('');
+  const L_=d.length-1;
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ingressos vendidos por dia nos últimos 14 dias. Pico de ${max} em ${lab(d.indexOf(max))}.">${grid}${bars}${xl}<text class="lbl" x="${(pl+L_*bw-2).toFixed(1)}" y="${(y(d[L_])+10).toFixed(1)}" text-anchor="end">${d[L_]} hoje</text></svg><span class="ctip" id="ctip" hidden></span></div>`;
+}
+function prod(){
+  const ev=evById(S.prodEv), st=S.prod.stats[ev.id], cap=st.lotes.reduce((a,l)=>a+l.cap,0), sold=soldOf(ev.id);
+  const gross=st.lotes.reduce((a,l)=>a+l.sold*l.p,0), fee=Math.round(gross*.015*100)/100, net=gross-fee, avail=Math.max(0,net-st.paid), r=S.prod.rules[ev.id];
+  const ages=sold?[['18–21',22],['22–25',41],['26–30',27],['31+',10]]:[], hoods=sold?[['Pinheiros',18],['Vila Madalena',12],['Barra Funda',9],['Perdizes',8]]:[];
+  return `<header class="rh" style="--c:${ev.c}"><button class="backbtn" data-a="exitProd" aria-label="Voltar ao app">${ic('back',20,2.2)}</button><div class="grow"><p class="eyebrow">Área do produtor · ${esc(S.prod.name)}</p><h1>Painel</h1></div></header>
+  <div class="pad" style="padding-top:4px">
+    <div class="evtabs">${S.prod.events.map(id=>{ const e=evById(id); return `<button class="${id===S.prodEv?'on':''}" style="--c:${e.c}" data-a="prodEv" data-id="${id}"><i></i>${esc(e.name)}</button>`; }).join('')}</div>
+    <p class="small muted">${esc(ev.date)} · ${esc(ev.time)} · ${esc(ev.place)}</p>
+    <section class="kpis">
+      <div class="kpi"><span class="eyebrow">Vendidos</span><span class="v">${sold}<small> / ${cap}</small></span><span class="bar"><i style="width:${cap?sold/cap*100:0}%"></i></span></div>
+      <div class="kpi"><span class="eyebrow">Receita</span><span class="v">${brl(gross)}</span><span class="s">valor dos ingressos</span></div>
+      <div class="kpi"><span class="eyebrow">Disponível</span><span class="v">${brl(avail)}</span><span class="s">repasse seg, 8 dez</span></div>
+      <div class="kpi"><span class="eyebrow">Check-ins</span><span class="v">${st.checkins.length}<small> / ${sold}</small></span><span class="s">abre no dia do evento</span></div>
+    </section>
+    <section class="card"><div class="sec"><h3>Vendas por dia</h3><span class="hint">últimos 14 dias</span></div>${salesChart(st.daily)}</section>
+    <section class="card"><div class="sec"><h3>Lotes</h3><button class="btn sm" data-a="prodLote">${ic('plus',14,2.2)}Lote extra</button></div>
+      ${st.lotes.map((l,i)=>{ const full=l.sold>=l.cap, on=!full&&(i===0||st.lotes[i-1].sold>=st.lotes[i-1].cap);
+        return `<div class="lote"><span><b>${esc(l.n)}</b> · ${brl(l.p)}<span class="stc${full?' sold':on?' on':''}">${full?'esgotado':on?'à venda':'próximo'}</span></span><span class="mono small">${l.sold}/${l.cap}</span><span class="bar"><i style="width:${l.sold/l.cap*100}%"></i></span></div>`; }).join('')}</section>
+    <section class="card"><h3>Quem comprou</h3>
+      ${sold?`<div class="stats3"><div><b>71%</b><span>visíveis no match</span></div><div><b>318</b><span>matches</span></div><div><b>86</b><span>posts no mural</span></div></div>
+      <p class="eyebrow">Idade</p>${ages.map(([k,v])=>`<div class="hbar"><span>${k}</span><span class="bar"><i style="width:${v/41*100}%"></i></span><span>${v}%</span></div>`).join('')}
+      <p class="eyebrow">De onde vêm</p>${hoods.map(([k,v])=>`<div class="hbar" style="grid-template-columns:100px 1fr 36px"><span>${k}</span><span class="bar"><i style="width:${v/18*100}%"></i></span><span>${v}%</span></div>`).join('')}
+      <p class="small muted">${ic('shield',14,2).replace('class="ic"','class="ic" style="display:inline;vertical-align:-2px"')} Dados agregados e anônimos. Você não vê quem é cada comprador (LGPD).</p>`
+      :'<p class="small muted">Os dados do público aparecem depois das primeiras vendas.</p>'}</section>
+    <section class="card"><h3>Regras da sala</h3><p class="small muted">Você decide o que funciona na rede social deste evento.</p>
+      <div class="list">${RULES.map(([k,t,d])=>`<button class="row" data-a="prodRule" data-id="${k}"><span class="grow"><b>${t}</b><small>${d}</small></span><span class="switch${r[k]?' on':''}"></span></button>`).join('')}</div></section>
+    <section class="card"><h3>Financeiro</h3><div class="fin">
+      <div><span>Ingressos vendidos</span><span>${brl(gross)}</span></div><div class="muted"><span>Taxa de pagamento (1,5%)</span><span>− ${brl(fee)}</span></div>
+      <div class="muted"><span>Já repassado (1 dez)</span><span>− ${brl(Math.min(st.paid,net))}</span></div><div class="tot"><span>Disponível</span><span>${brl(avail)}</span></div></div>
+      <p class="small muted">A taxa de serviço do Rolê (10%) é paga pelo comprador. O valor dos ingressos cai na sua conta via Pix, com split automático.</p></section>
+    <div class="mesa-acts"><button class="btn" data-a="prodMsg">${ic('megaphone',17)}Avisar compradores</button><button class="btn" data-a="openRoomProd">${ic('eye',17)}Ver a sala</button></div>
+  </div>`;
+}
+function prodNew(){
+  const c=cityById(S.city), sw=['#FF7A59','#FF5DA2','#FFB23F','#4ADE9B','#5BC0FF','#B9A6FF'];
+  return `<div class="maptop-spacer"><button class="backbtn" data-a="prodBack" aria-label="Voltar ao painel">${ic('back',20,2.2)}</button><span class="crosshair">${ic('pin',38,2.2)}</span><span class="pinlabel" id="pinlabel">${map?nearestHood(map.getCenter()):c.name} · ${c.name}</span></div>
+  <div class="pad sheetlike"><div><p class="eyebrow">Área do produtor</p><h2 style="font-size:22px">Novo evento em ${c.name}</h2><p class="small muted">Arraste o mapa até o pin ficar no local da festa.</p></div>
+    <form class="pform" id="prodNewForm" data-form="prodNew">
+      <label class="field">Nome do evento<input id="pn-n" value="Sunset Secreto" required maxlength="40"></label>
+      <div class="grid2"><label class="field">Data<input id="pn-d" value="Sáb, 13 dez" required></label><label class="field">Horário<input id="pn-h" value="17h às 2h" required></label></div>
+      <div class="grid2"><label class="field">Preço do 1º lote (R$)<input id="pn-p" type="number" min="0" step="1" value="50" required></label><label class="field">Ingressos no lote<input id="pn-c" type="number" min="1" step="1" value="300" required></label></div>
+      <div class="field">Idade mínima<div class="seg">${[['18','18+'],['16','16+'],['0','Livre']].map(([k,l])=>`<button type="button" class="${S.pnAge===k?'on':''}" data-a="pnAge" data-id="${k}">${l}</button>`).join('')}</div></div>
+      <div class="field">Cor no mapa<div class="swatches">${sw.map(x=>`<button type="button" class="sw${S.pnColor===x?' on':''}" style="--c:${x}" data-a="pnColor" data-id="${x}" aria-label="Cor ${x}"></button>`).join('')}</div></div>
+      <div class="field">Regras da sala<div class="list">${RULES.map(([k,t,d])=>`<button type="button" class="row" data-a="pnRule" data-id="${k}"><span class="grow"><b>${t}</b><small>${d}</small></span><span class="switch${S.pnRules[k]?' on':''}"></span></button>`).join('')}</div></div>
+    </form>
+  </div>`;
+}
+function checkin(){
+  const ev=evById(S.prodEv), st=S.prod.stats[ev.id], sold=soldOf(ev.id), n=st.checkins.length, r=S.scanRes;
+  return `<header class="rh" style="--c:${ev.c}"><button class="backbtn" data-a="prodGo" data-id="prod" aria-label="Voltar ao painel">${ic('back',20,2.2)}</button><div class="grow"><p class="eyebrow">Check-in · porta principal</p><h1>${esc(ev.name)}</h1></div></header>
+  <div class="pad" style="padding-top:4px">
+    <div class="scanner"><span class="cn tl"></span><span class="cn tr"></span><span class="cn bl"></span><span class="cn br"></span><i class="laser"></i><span>Aponte para o QR do ingresso</span>
+      ${r?`<div class="scanres ${r.ok?'ok':'bad'}" role="status">${ic(r.ok?'check':'x',44,3)}<b>${esc(r.t)}</b><span>${esc(r.d)}</span></div>`:''}</div>
+    <div class="cicount"><span class="eyebrow">Entraram</span><span><b>${n}</b> <span class="muted">de ${sold}</span></span><span class="bar"><i style="width:${sold?n/sold*100:0}%"></i></span></div>
+    <p class="small muted">O QR muda a cada 30 s no celular do comprador. Print, foto de outra tela e ingresso já usado são recusados.</p>
+    ${n?`<div class="list">${st.checkins.slice(0,6).map(c=>`<div class="row">${av(c.n,c.h,34)}<span class="grow"><b>${esc(c.n)}</b><small>${esc(c.lote)}</small></span><span class="mono small muted">${c.t}</span></div>`).join('')}</div>`:''}
+  </div>`;
+}
+function prodDock(){
+  if(S.screen==='prodNew') return `<nav class="dock"><button class="side" data-a="prodBack" aria-label="Cancelar">${ic('x',22)}</button><button class="main" data-a="prodSubmit">${ic('pin',18,2)}Publicar no mapa</button><span></span></nav>`;
+  const left=`<button class="side" data-a="exitProd" aria-label="Voltar ao app">${ic('user',22)}</button>`;
+  if(S.screen==='checkin') return `<nav class="dock">${left}<button class="main" data-a="scan">${ic('scan',18,2)}Ler ingresso</button><button class="side" data-a="prodGo" data-id="prod" aria-label="Painel">${ic('chart',22)}</button></nav>`;
+  return `<nav class="dock">${left}<button class="main" data-a="prodNew">${ic('plus',18,2.4)}Criar evento</button><button class="side" data-a="prodGo" data-id="checkin" aria-label="Check-in">${ic('scan',22)}</button></nav>`;
+}
+function sheetExtra(sh){
+  if(sh.type==='city') return `<h3>${sh.first?'Onde você está?':'Trocar de cidade'}</h3><p class="small muted">O Rolê mostra no mapa os eventos da sua cidade.</p>
+    <button class="btn acc block" data-a="locate">${ic('locate',18,2)}${S.locating?'Procurando você…':'Usar minha localização'}</button>
+    <div class="list">${CITIES.map(c=>{ const n=EVENTS.filter(e=>e.city===c.id).length; return `<button class="row" data-a="city" data-id="${c.id}"><span class="grow"><b>${c.name}</b><small>${c.uf} · ${n?n+' rolês esta semana':'em breve'}</small></span>${S.city===c.id&&!sh.first?ic('check',18,2.4):''}</button>`; }).join('')}</div>`;
+  if(sh.type==='prodMsg'){ const ev=evById(S.prodEv), sold=soldOf(ev.id);
+    return `<h3>Avisar quem comprou</h3><p class="small muted">${sold} compradores do ${esc(ev.name)} recebem uma notificação, e o aviso fica fixado no mural da sala.</p>
+      <textarea class="ta" id="pm-t">Portões abertos! Chega cedo: o primeiro set começa às 23h30.</textarea><button class="btn acc block" data-a="sendProdMsg">${ic('megaphone',18)}Enviar aviso</button>`; }
+  return '';
+}
+function submitProdNew(){
+  const g=id=>document.getElementById(id).value.trim(), c=cityById(S.city), ctr=map?map.getCenter():{lat:c.lat,lng:c.lng};
+  const name=g('pn-n')||'Novo evento', price=Math.max(0,+g('pn-p')||0), cap=Math.max(1,+g('pn-c')||100), id='u'+Date.now();
+  EVENTS.push({id,name,date:g('pn-d'),time:g('pn-h'),place:nearestHood(ctr),price,lote:'1º lote',going:0,lat:ctr.lat,lng:ctr.lng,city:S.city,when:'prox',c:S.pnColor,producer:S.prod.name,friends:[],mine:true});
+  PEOPLE[id]=[]; S.posts[id]=[];
+  S.prod.events.push(id); S.prod.stats[id]={daily:Array(14).fill(0),lotes:[{n:'1º lote',p:price,sold:0,cap}],checkins:[],paid:0}; S.prod.rules[id]={...S.pnRules};
+  S.prodEv=id; S.sel=id; S.filter='tudo'; S.screen='prod'; render(true);
+  toast(`Publicado. ${name} já aparece no mapa de ${c.name}.`);
+}
+/* ---- E: relógio da noite ---- */
+const hr=h=>(h%24)+'h';
+function evHours(e){ if(e.s!=null) return [e.s,e.e]; const m=/(\d+)h\D+(\d+)h/.exec(e.time||''); if(m){ let s=+m[1], en=+m[2]; if(s<12) s+=24; if(en<=s) en+=24; return [s,en]; } return [22,29]; }
+/* Versão E fixada numa sexta à noite: sexta, 27 de novembro, 23h */
+const SIM_DIA='Sexta', SIM_HORA=23;
+function nowHour(){ return SIM_HORA; }
+function evState(e){
+  if(e.when!=='hoje') return 'off';
+  const [s,en]=evHours(e), h=nowHour(), inR=t=>t>=s&&t<en;
+  if(inR(h)||inR(h+24)) return 'on';
+  if(h<s&&s-h<=3) return 'soon';
+  return 'off';
+}
+function stateLabel(e){
+  const st=evState(e); if(st==='on') return 'Aberto agora';
+  if(e.when!=='hoje') return e.date;
+  const s=evHours(e)[0]; return nowHour()<s?'Abre hoje às '+hr(s):'Fechado agora';
+}
+function clockCountTxt(){ const n=cityEvents().filter(e=>evState(e)==='on').length; return n?`${n} ${n===1?'rolê aceso':'rolês acesos'}`:'cidade apagada'; }
+function clockHTML(){
+  return `<div class="clock" title="Relógio da noite: arraste para ver a cidade acender e apagar">${ic('bolt',16,2)}<b id="clockLbl">${hr(S.clock)}</b>
+    <input type="range" id="clock" min="16" max="30" step="1" value="${S.clock}" aria-label="Relógio da noite, das 16h às 6h"><span class="small muted" id="clockCount">${clockCountTxt()}</span></div>`;
+}
+function refreshClock(){
+  const lb=document.getElementById('clockLbl'), ct=document.getElementById('clockCount'); if(lb) lb.textContent=hr(S.clock); if(ct) ct.textContent=clockCountTxt();
+  document.querySelectorAll('.ecard[data-id]').forEach(el=>{ const e=evById(el.dataset.id); if(e) el.classList.toggle('off',evState(e)==='off'); });
+  updateMarkers();
+}
+let lastNowH=nowHour();
+setInterval(()=>{ const h=nowHour(); if(h!==lastNowH){ lastNowH=h; if(S.screen==='home'&&!S.sheet&&!S.viewer) render(); } },60000);
+
+/* ---- match com cards (curtir / passar) ---- */
+function deckHTML(e){
+  if(S.visibility!=='visivel') return `<div class="recv"><b>Você está fora do match</b><p class="small muted">Ative "Visível" no perfil para ver e ser visto por quem vai.</p><button class="btn acc sm" data-a="vis" data-id="visivel">Aparecer no match</button></div>`;
+  const list=PEOPLE[e.id].map((p,i)=>({p,i})).filter(x=>!S.waved[e.id+'|'+x.i]&&!S.passed[e.id+'|'+x.i]);
+  if(!list.length) return `<div class="recv"><b>Você viu todo mundo por enquanto</b><p class="small muted">Novas pessoas aparecem conforme compram ingresso. Depois da festa, o match fica aberto por 48 h.</p></div>`;
+  const card=(x,under)=>`<div class="swipe${under?' under':''}" style="--h:${x.p.h}" data-card="${e.id}|${x.i}"${under?' aria-hidden="true"':''}>
+    <div class="face"><span class="big">${x.p.n[0]}</span><span class="vf">${ic('shield',12,2)}Verificado</span><span class="stamp2 like">CURTI</span><span class="stamp2 pass">PASSO</span></div>
+    <div class="info"><h3>${x.p.n} <span>${x.p.a}</span></h3><p class="small muted">${x.p.w} · ${e.name}</p><p class="small">${x.p.bio}</p><div class="chips">${x.p.tags.map(t=>`<span class="chip">${t}</span>`).join('')}</div></div></div>`;
+  return `<div class="deck">${list[1]?card(list[1],true):''}${card(list[0],false)}</div>
+    <div class="deck-btns"><button class="round" data-a="swipe" data-id="0" aria-label="Passar">${ic('x',24,2.2)}</button><button class="round like" data-a="swipe" data-id="1" aria-label="Curtir">${ic('heart',24,2.2)}</button></div>`;
+}
+function bindDeck(){
+  const c=$app.querySelector('.swipe:not(.under)'); if(!c) return;
+  let x0=null, dx=0;
+  c.addEventListener('pointerdown',ev=>{ x0=ev.clientX; dx=0; c.setPointerCapture(ev.pointerId); c.style.transition='none'; });
+  c.addEventListener('pointermove',ev=>{ if(x0===null) return; dx=ev.clientX-x0; c.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`; c.dataset.dir=dx>40?'like':dx<-40?'pass':''; });
+  const end=()=>{ if(x0===null) return; x0=null; c.style.transition=''; if(Math.abs(dx)>90) decideCard(dx>0); else { c.style.transform=''; c.dataset.dir=''; } dx=0; };
+  c.addEventListener('pointerup',end); c.addEventListener('pointercancel',end);
+}
+function decideCard(like){
+  const c=$app.querySelector('.swipe:not(.under)'); if(!c) return; const id=c.dataset.card;
+  c.dataset.dir=like?'like':'pass'; c.style.transform=`translateX(${like?420:-420}px) rotate(${like?22:-22}deg)`; c.style.opacity='0';
+  setTimeout(()=>{ if(like) wave(id,false,true); else { S.passed[id]=true; render(); } },230);
+}
+let scanT;
+Object.assign(A,{
+  swipe:id=>decideCard(id==='1'),
+  matchRoom:id=>{ S.wallet=false; S.hour=1; go('room',{ev:id}); },
+  sel:id=>{ S.sel=id; render(); flyTo(id); },
+  filter:id=>{ S.filter=id; const evs=cityEvents(); if(!evs.find(e=>e.id===S.sel)&&!(S.sel==='mesa'&&showMesa())) S.sel=evs[0]?evs[0].id:(showMesa()?'mesa':null); carScroll=0; render(); },
+  cities:()=>{ S.sheet={type:'city'}; render(); },
+  city:id=>setCity(id),
+  zoom:id=>{ if(map) map.setZoom(map.getZoom()+(+id)); },
+  locate:()=>{
+    if(S.locating) return;
+    if(!navigator.geolocation){ toast('Este navegador não tem GPS. Escolha a cidade na lista.'); return; }
+    S.locating=true; render(); const req=++geoReq;
+    const fail=()=>{ if(req!==geoReq||!S.locating) return; clearTimeout(geoTimer); S.locating=false; geoReq++; render(); toast('Não deu pra usar o GPS aqui. Escolha a cidade na lista.'); };
+    geoTimer=setTimeout(fail,6000);
+    try{ navigator.geolocation.getCurrentPosition(p=>{
+      if(req!==geoReq) return; clearTimeout(geoTimer);
+      S.locating=false; const pos=[p.coords.latitude,p.coords.longitude]; let best=CITIES[0],bd=1e9;
+      CITIES.forEach(c=>{ const d=distLL(pos,[c.lat,c.lng]); if(d<bd){ bd=d; best=c; } });
+      setCity(best.id, bd<80?pos:null);
+      toast(bd<80?`Você está em ${best.name}`:`A cidade com Rolê mais perto é ${best.name}, a ${Math.round(bd)} km`);
+    },fail,{timeout:5000,maximumAge:600000}); }catch(err){ fail(); }
+  },
+  prod:()=>{ S.sheet=null; S.wallet=false; S.stack=[]; if(!S.prod.events.includes(S.prodEv)) S.prodEv=S.prod.events[0]; S.screen='prod'; render(true); },
+  exitProd:()=>{ S.stack=[]; S.screen='home'; S.scanRes=null; render(true); },
+  prodGo:id=>{ S.screen=id; S.scanRes=null; render(true); },
+  prodEv:id=>{ S.prodEv=id; render(); },
+  prodNew:()=>{ S.screen='prodNew'; S.sheet=null; render(true); const c=cityById(S.city); if(map){ map.setView(c.me||[c.lat,c.lng],14); map.invalidateSize(); } },
+  prodBack:()=>{ S.screen='prod'; render(true); },
+  prodSubmit:()=>{ const f=document.getElementById('prodNewForm'); if(f){ if(f.reportValidity()) submitProdNew(); } },
+  pnAge:id=>{ S.pnAge=id; render(); },
+  pnColor:id=>{ S.pnColor=id; render(); },
+  pnRule:id=>{ S.pnRules[id]=!S.pnRules[id]; render(); },
+  prodRule:id=>{ const r=S.prod.rules[S.prodEv]; r[id]=!r[id]; render(); },
+  prodLote:()=>{ const st=S.prod.stats[S.prodEv], last=st.lotes[st.lotes.length-1]; st.lotes.push({n:'Lote extra',p:last.p+20,sold:0,cap:50}); toast('Lote extra com 50 ingressos aberto'); },
+  prodMsg:()=>{ S.sheet={type:'prodMsg'}; render(); },
+  sendProdMsg:()=>{ const v=document.getElementById('pm-t').value.trim(); if(!v) return; const ev=evById(S.prodEv);
+    (S.posts[ev.id]=S.posts[ev.id]||[]).unshift({who:S.prod.name,h:300,prod:true,t:'agora',txt:v,likes:0}); document.getElementById('pm-t').value=''; S.sheet=null;
+    toast(`Aviso enviado para ${soldOf(ev.id)} compradores e fixado no mural`); },
+  openRoomProd:()=>{ S.owned[S.prodEv]=true; S.stack=[{screen:'prod',ev:null}]; S.ev=S.prodEv; S.hour=1; S.screen='room'; render(true); },
+  scan:()=>{
+    const st=S.prod.stats[S.prodEv], pool=[...PEOPLE.neon.map(p=>[p.n,p.h]),...GHOSTS]; S.scanN++; const k=S.scanN;
+    if(k%7===0) S.scanRes={ok:false,t:'QR expirado',d:'Parece print. Peça pra abrir o ingresso no app.'};
+    else if(k%5===0&&st.checkins.length) S.scanRes={ok:false,t:'Já utilizado',d:`${st.checkins[0].n} entrou às ${st.checkins[0].t}`};
+    else { const [nm,h]=pool[k%pool.length], m=2+st.checkins.length*2; const t=`${m>59?'00':'23'}:${String(m%60).padStart(2,'0')}`, lote=st.lotes[st.checkins.length%Math.min(2,st.lotes.length)].n;
+      st.checkins.unshift({n:nm,h,t,lote}); S.scanRes={ok:true,t:'Pode entrar',d:`${nm} · ${lote}`}; }
+    render(); clearTimeout(scanT); scanT=setTimeout(()=>{ S.scanRes=null; if(S.screen==='checkin') render(); },1800);
+  },
+  guide:id=>{
+    S.sheet=null; S.wallet=false; S.viewer=null; S.stack=[]; S.scanRes=null;
+    if(id==='city'){ S.screen='home'; S.mode='mapa'; S.sheet={type:'city'}; render(true); return; }
+    if(id==='map'){ S.screen='home'; S.mode='mapa'; render(true); return; }
+    if(id==='room'){ S.owned.neon=true; S.ev='neon'; S.hour=1; S.screen='room'; render(true); return; }
+    if(id==='prod'){ S.prodEv='neon'; S.screen='prod'; render(true); return; }
+    if(id==='prodNew'){ A.prodNew(); return; }
+    if(id==='checkin'){ S.prodEv='neon'; S.screen='checkin'; render(true); return; }
+    if(id==='mesa'){ S.screen='mesa'; render(true); }
+  },
+  reset:()=>{ for(let i=EVENTS.length-1;i>=0;i--) if(EVENTS[i].mine) EVENTS.splice(i,1); S=freshState(); carScroll=0; mkKey=''; geoReq++; clearTimeout(geoTimer); render(true); const c=cityById('sp'); if(map) map.setView([c.lat,c.lng],c.z); }
+});
+document.addEventListener('pointermove',ev=>{
+  const tip=document.getElementById('ctip'); if(!tip) return; const b=ev.target.closest&&ev.target.closest('.sbar');
+  if(!b){ tip.hidden=true; return; } const box=tip.parentElement.getBoundingClientRect(), r=b.getBoundingClientRect();
+  tip.textContent=b.dataset.tip; tip.style.left=(r.left+r.width/2-box.left)+'px'; tip.style.top=(r.top-box.top)+'px'; tip.hidden=false;
+});
+
+if(!window.L) S.mode='lista';
+S.sheet={type:'city',first:true};
+render(true);
+</script>
+
+</body>
+</html>

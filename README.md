@@ -15,3 +15,8 @@ Protótipo clicável de um app de ingressos para festas e rolês, com uma rede s
 É um arquivo HTML só, sem instalação. Abra o `index.html` no navegador ou acesse a versão publicada no GitHub Pages.
 
 O mapa usa o OpenStreetMap. Pagamentos, logins e dados são simulados: nada é cobrado de verdade.
+
+## Versões
+
+- **E** (`/e/`): o mapa da cidade à noite, com cada rolê aceso como uma luz.
+- **F** (`/f/`): a versão E com o visual revisto pela skill [unslop](https://heydamir.design/unslop), de Damir Sokolovsky (CC BY 4.0). Tons escuros neutros, uma luz âmbar só no que está aberto agora, e a cor guardada para os cartazes no mapa e os ingressos de papel.
