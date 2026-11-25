@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rolê Cidade Acesa</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rolê">
+<meta name="theme-color" content="#0B1022">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: sem lista e sem barra de abas. Radar de festas + carteira de ingressos; cada festa é uma "sala" com um relógio lateral que muda o conteúdo (esquenta, pista, depois); dock flutuante contextual. */
@@ -597,6 +605,21 @@ body{background:#FFFFFF;background-image:none}
 }
 @media (max-width:480px){
   .phone{width:100%;height:calc(100vh - 24px);height:calc(100dvh - 24px);border-width:6px;border-radius:30px;min-height:560px}
+}
+/* celular de verdade: sem moldura, app ocupa a tela inteira (inclusive aberto pela Tela de Início) */
+@media (max-width:600px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{padding:0;margin:0;background:var(--bg)}
+  .stage{display:block;min-height:0;padding:0}
+  .guide{display:none}
+  .phone{position:fixed;left:0;right:0;top:0;bottom:0;width:auto;height:auto;min-height:0;max-width:none;
+    border:0!important;border-radius:0;box-shadow:none!important;
+}
+  .phone>.app,.phone>.map{top:env(safe-area-inset-top,0px)}
+  .dock{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  .scroll{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+  .sheet{padding-bottom:calc(26px + env(safe-area-inset-bottom,0px))}
 }
 </style>
 </head>
